@@ -1,15 +1,15 @@
 # Multi-Brain Status
 
 ## Project State
-Status: Late Phase 3, very close to Phase 4
+Status: Phase 4 underway
 
-ModernClawMulti now has a real working multi-brain loop, not just the foundation. Users can create, switch, use, and delete isolated brains from the shell, and the app now behaves much more calmly during brain switches.
+ModernClawMulti now has a real working multi-brain loop with stable create, switch, delete, conversation restore, stream isolation, brain-level model persistence, and clearer brain-scoped UI surfaces.
 
 ## Current Objective
-Close out the last high-value Phase 3 polish items, then move into broader Phase 4 workspace-integration confidence work without widening scope unnecessarily.
+Continue Phase 4 by validating and hardening the remaining brain-scoped workspace flows while preserving the calm, predictable behavior already achieved in Chat, Memory, Brain, and model switching.
 
 ## Current Phase
-Phase 3: Brain Selector UX and switching polish
+Phase 4: Full Workspace Integration
 
 ## Completed
 - project folder created
@@ -62,6 +62,10 @@ Phase 3: Brain Selector UX and switching polish
 - knowledge storage isolation validated across Rosie and Mia
 - curator inbox isolation validated across Rosie and Mia
 - transient Brain-view feedback now resets on brain switch so success banners do not leak between brains
+- Curator inbox UI now explicitly names the active brain
+- Daily Logs UI now explicitly indicates entries belong to the active brain
+- Knowledge Files UI now explicitly indicates files belong to the active brain
+- deeper workspace surfaces now feel visibly brain-scoped, not just technically scoped
 
 ## What The App Can Do Now
 - seed and resolve the baseline Rosie brain
@@ -77,25 +81,27 @@ Phase 3: Brain Selector UX and switching polish
 - persist a preferred model to the active brain and restore it on switch
 - rename conversations inline from the sidebar
 - show clearer brain-aware empty guidance in chat and sidebar surfaces
-- show the active brain more clearly in Memory, Brain, and sidebar surfaces
+- show the active brain more clearly in Memory, Brain, Curator, Daily Logs, Knowledge Files, and sidebar surfaces
 
 ## What Is Still Missing
-- broader Phase 4 stress-testing of brain-scoped workflows beyond the first real validation pass
+- broader Phase 4 stress-testing of all remaining brain-scoped workflows under real use
+- final review of whether any hidden single-brain assumptions remain in less frequently used surfaces
 - optional archive-brain support if later needed
-- final judgment on whether the remaining polish is light enough to call Phase 3 done and move into Phase 4 officially
+- eventual decision on when the project is stable enough to begin the wizard and support-brain layers
 
 ## Current Limits
-The core create, switch, isolate, restore, and brain-level model loop is now working. The main remaining gaps are no longer structural. They are mostly confidence, continued validation, and a few optional quality-of-life choices.
+The structural multi-brain system is working. The remaining work is no longer about proving the architecture. It is about continuing to validate, harden, and polish the full workspace experience so new feature layers are built on stable truths.
 
 ## Next
-- decide whether the remaining work is small enough to call Phase 3 complete
-- continue targeted validation of deeper workspace surfaces under real use
-- keep the multi-brain system stable while the wizard and support-brain planning advances
+- continue targeted Phase 4 validation under real use
+- watch for stale state in less frequently used workspace surfaces
+- avoid adding wizard/support features until the remaining workspace truths feel stable
+- checkpoint stability improvements as they are proven
 
 ## Immediate Risks
 - stale frontend state in deeper workspace surfaces that have not yet been stressed as hard as chat, memory, and brain switching
-- user confusion if future features assume a single-brain mental model again
-- adding too many new features before the current multi-brain milestone is formally stabilized
+- future features accidentally reintroducing single-brain assumptions
+- moving into wizard/support work before the remaining workspace truths are stable enough
 
 ## Guardrails
 - keep v1 narrow
@@ -105,8 +111,7 @@ The core create, switch, isolate, restore, and brain-level model loop is now wor
 - update this status doc before or with every checkpoint commit so repo truth stays current
 
 ## Definition Of Progress
-This phase will feel truly solid when:
-- the user can create and manage multiple brains in the UI without confusion
-- switching between brains is obvious and calm
-- Memory, Brain, and conversations stay isolated without surprises
-- the remaining management and workspace polish no longer makes the app feel experimental
+Phase 4 will feel healthy when:
+- every major workspace surface behaves as obviously brain-scoped
+- remaining hidden bleed risks are squeezed out through real use
+- new feature work can rely on stable multi-brain truths instead of assumptions

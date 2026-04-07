@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { DailyLogComposer } from '@/components/memory/DailyLogComposer';
 import { DailyLogViewer } from '@/components/memory/DailyLogViewer';
 import { Button } from '@/components/ui/Button';
+import { useAgentStore } from '@/stores/agentStore';
 import { useMemoryStore } from '@/stores/memoryStore';
 
 export function DailyLogList() {
+  const activeAgent = useAgentStore((state) => state.activeAgent);
   const dailyLogs = useMemoryStore((state) => state.dailyLogs);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const brainName = activeAgent?.name ?? 'this brain';
 
   const handleSaved = (date: string) => {
     setIsComposing(false);
@@ -16,7 +19,10 @@ export function DailyLogList() {
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-xs leading-6 text-muted-foreground">
+          These entries belong only to {brainName}.
+        </p>
         <Button variant="outline" size="sm" onClick={() => setIsComposing(true)}>
           New Entry
         </Button>
@@ -25,7 +31,7 @@ export function DailyLogList() {
       {dailyLogs.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-background/60 p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            No daily logs yet. Create the first entry to start building short-term memory for today.
+            No daily logs yet for {brainName}. Create the first entry to start building short-term memory for this brain.
           </p>
           <Button className="mt-4" onClick={() => setIsComposing(true)}>
             Create Today&apos;s First Entry
