@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DailyLogComposer } from '@/components/memory/DailyLogComposer';
 import { DailyLogViewer } from '@/components/memory/DailyLogViewer';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,11 @@ export function DailyLogList() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isComposing, setIsComposing] = useState(false);
   const brainName = activeAgent?.name ?? 'this brain';
+
+  useEffect(() => {
+    setSelectedDate(null);
+    setIsComposing(false);
+  }, [activeAgent?.agentId]);
 
   const handleSaved = (date: string) => {
     setIsComposing(false);

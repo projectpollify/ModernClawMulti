@@ -62,6 +62,8 @@ Phase 4: Full Workspace Integration
 - knowledge storage isolation validated across Rosie and Mia
 - curator inbox isolation validated across Rosie and Mia
 - transient Brain-view feedback now resets on brain switch so success banners do not leak between brains
+- Brain guided-setup drafts, knowledge-intake drafts, and curator action feedback now reset cleanly on brain switch
+- daily-log composer and viewer now reset or reload cleanly when switching brains mid-flow
 - Curator inbox UI now explicitly names the active brain
 - Daily Logs UI now explicitly indicates entries belong to the active brain
 - Knowledge Files UI now explicitly indicates files belong to the active brain
@@ -82,6 +84,7 @@ Phase 4: Full Workspace Integration
 - rename conversations inline from the sidebar
 - show clearer brain-aware empty guidance in chat and sidebar surfaces
 - show the active brain more clearly in Memory, Brain, Curator, Daily Logs, Knowledge Files, and sidebar surfaces
+- keep Brain and daily-log draft surfaces from carrying stale state across brain switches
 
 ## What Is Still Missing
 - broader Phase 4 stress-testing of all remaining brain-scoped workflows under real use
@@ -94,7 +97,7 @@ The structural multi-brain system is working. The remaining work is no longer ab
 
 ## Next
 - continue targeted Phase 4 validation under real use
-- watch for stale state in less frequently used workspace surfaces
+- keep watching for stale state in less frequently used workspace surfaces after this latest draft-reset pass
 - avoid adding wizard/support features until the remaining workspace truths feel stable
 - checkpoint stability improvements as they are proven
 
@@ -115,3 +118,5 @@ Phase 4 will feel healthy when:
 - every major workspace surface behaves as obviously brain-scoped
 - remaining hidden bleed risks are squeezed out through real use
 - new feature work can rely on stable multi-brain truths instead of assumptions
+
+

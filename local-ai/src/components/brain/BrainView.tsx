@@ -69,6 +69,27 @@ export function BrainView() {
     void initializeMemory();
   }, [initializeMemory]);
 
+  useEffect(() => {
+    setApplyingId(null);
+    setFeedbackById({});
+    setError(null);
+    setKnowledgeTitle('');
+    setKnowledgeSummary('');
+    setKnowledgeTags('');
+    setKnowledgeContent('');
+    setKnowledgeSource('');
+    setIsSavingKnowledge(false);
+    setKnowledgeFeedback(null);
+    setSetupRole('');
+    setSetupSupport('');
+    setSetupTone('');
+    setSetupPriorities('');
+    setIsApplyingSetup(false);
+    setSetupFeedback(null);
+    setCuratorActionId(null);
+    setCuratorFeedbackById({});
+  }, [activeAgent?.agentId]);
+
   const setupStatusItems = [
     {
       label: 'SOUL.md',
@@ -958,5 +979,6 @@ function formatTimestamp(value: string) {
     minute: '2-digit',
   });
 }
+
 
 
