@@ -1,23 +1,38 @@
+import { useEffect, useState } from 'react';
+import { useAgentStore } from '@/stores/agentStore';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useViewStore } from '@/stores/uiStore';
 import { cn } from '@/lib/utils';
 import type { Conversation } from '@/types';
 
 export function ConversationList() {
+  const activeAgent = useAgentStore((state) => state.activeAgent);
   const conversations = useConversationStore((state) => state.conversations);
   const currentId = useConversationStore((state) => state.currentId);
   const selectConversation = useConversationStore((state) => state.selectConversation);
   const deleteConversation = useConversationStore((state) => state.deleteConversation);
+  const renameConversation = useConversationStore((state) => state.renameConversation);
   const setView = useViewStore((state) => state.setView);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState('');
 
   const recentConversations = [...conversations].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
+  useEffect(() => {
+    setEditingId(null);
+    setDraftTitle('');
+  }, [activeAgent?.agentId]);
+
   if (recentConversations.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border/80 bg-background/70 px-3 py-4 text-sm text-muted-foreground">
-        No conversations yet
+        <p>No conversations yet for {activeAgent?.name ?? 'this brain'}.</p>
+        <p className="mt-2 text-xs leading-6 text-muted-foreground">
+          Start a new chat to give this brain its own conversation history.
+        </p>
       </div>
     );
   }
@@ -31,6 +46,34 @@ export function ConversationList() {
 
   const handleDelete = async (id: string) => {
     await deleteConversation(id);
+    if (editingId === id) {
+      setEditingId(null);
+      setDraftTitle('');
+    }
+  };
+
+  const beginRename = (conversation: Conversation) => {
+    setEditingId(conversation.id);
+    setDraftTitle(conversation.title);
+  };
+
+  const cancelRename = () => {
+    setEditingId(null);
+    setDraftTitle('');
+  };
+
+  const saveRename = async (conversation: Conversation) => {
+    const trimmedTitle = draftTitle.trim();
+    if (!trimmedTitle) {
+      setDraftTitle(conversation.title);
+      return;
+    }
+
+    if (trimmedTitle !== conversation.title) {
+      await renameConversation(conversation.id, trimmedTitle);
+    }
+
+    cancelRename();
   };
 
   return (
@@ -46,8 +89,14 @@ export function ConversationList() {
                 key={conversation.id}
                 conversation={conversation}
                 isActive={conversation.id === currentId}
+                isEditing={conversation.id === editingId}
+                draftTitle={draftTitle}
+                onDraftTitleChange={setDraftTitle}
                 onSelect={() => handleSelect(conversation.id)}
-                onDelete={() => handleDelete(conversation.id)}
+                onStartRename={() => beginRename(conversation)}
+                onSaveRename={() => void saveRename(conversation)}
+                onCancelRename={cancelRename}
+                onDelete={() => void handleDelete(conversation.id)}
               />
             ))}
           </div>
@@ -60,14 +109,26 @@ export function ConversationList() {
 interface ConversationItemProps {
   conversation: Conversation;
   isActive: boolean;
+  isEditing: boolean;
+  draftTitle: string;
+  onDraftTitleChange: (value: string) => void;
   onSelect: () => void;
+  onStartRename: () => void;
+  onSaveRename: () => void;
+  onCancelRename: () => void;
   onDelete: () => void;
 }
 
 function ConversationItem({
   conversation,
   isActive,
+  isEditing,
+  draftTitle,
+  onDraftTitleChange,
   onSelect,
+  onStartRename,
+  onSaveRename,
+  onCancelRename,
   onDelete,
 }: ConversationItemProps) {
   return (
@@ -79,23 +140,75 @@ function ConversationItem({
           : 'text-foreground hover:bg-accent hover:text-accent-foreground'
       )}
     >
-      <button onClick={onSelect} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-medium">{conversation.title}</p>
-        {conversation.preview ? (
-          <p className="truncate text-xs text-muted-foreground">{conversation.preview}</p>
-        ) : null}
-      </button>
+      {isEditing ? (
+        <div className="min-w-0 flex-1 space-y-2">
+          <input
+            value={draftTitle}
+            onChange={(event) => onDraftTitleChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                onSaveRename();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                onCancelRename();
+              }
+            }}
+            autoFocus
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary/40"
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={onSaveRename}
+              className="rounded px-2 py-1 text-xs text-foreground transition-colors hover:bg-background/80"
+            >
+              Save
+            </button>
+            <button
+              onClick={onCancelRename}
+              className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={onSelect} className="min-w-0 flex-1 text-left">
+          <p className="truncate text-sm font-medium">{conversation.title}</p>
+          {conversation.preview ? (
+            <p className="truncate text-xs text-muted-foreground">{conversation.preview}</p>
+          ) : null}
+        </button>
+      )}
 
-      <button
-        onClick={(event) => {
-          event.stopPropagation();
-          onDelete();
-        }}
-        className="rounded p-1 opacity-0 transition-opacity hover:bg-background/80 group-hover:opacity-100"
-        aria-label={`Delete ${conversation.title}`}
-      >
-        <TrashIcon className="h-4 w-4" />
-      </button>
+      {!isEditing ? (
+        <>
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              onStartRename();
+            }}
+            className="rounded p-1 opacity-0 transition-opacity hover:bg-background/80 group-hover:opacity-100"
+            aria-label={`Rename ${conversation.title}`}
+            title="Rename conversation"
+          >
+            <PencilIcon className="h-4 w-4" />
+          </button>
+
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            className="rounded p-1 opacity-0 transition-opacity hover:bg-background/80 group-hover:opacity-100"
+            aria-label={`Delete ${conversation.title}`}
+            title="Delete conversation"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -129,6 +242,19 @@ function groupByDate(conversations: Conversation[]): Record<string, Conversation
 
   return Object.fromEntries(
     Object.entries(groups).filter(([, items]) => items.length > 0)
+  );
+}
+
+function PencilIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.586-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.414-8.586z"
+      />
+    </svg>
   );
 }
 

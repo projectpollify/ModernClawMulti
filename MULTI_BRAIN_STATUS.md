@@ -1,12 +1,12 @@
 # Multi-Brain Status
 
 ## Project State
-Status: Late Phase 3, approaching Phase 4
+Status: Late Phase 3, very close to Phase 4
 
 ModernClawMulti now has a real working multi-brain loop, not just the foundation. Users can create, switch, use, and delete isolated brains from the shell, and the app now behaves much more calmly during brain switches.
 
 ## Current Objective
-Close out the remaining high-value Phase 3 polish, then move into Phase 4 workspace-integration work without widening scope unnecessarily.
+Close out the last high-value Phase 3 polish items, then move into broader Phase 4 workspace-integration confidence work without widening scope unnecessarily.
 
 ## Current Phase
 Phase 3: Brain Selector UX and switching polish
@@ -56,6 +56,12 @@ Phase 3: Brain Selector UX and switching polish
 - model picker and model cards now clearly act on the active brain instead of behaving like loose global selectors
 - empty chat guidance is now brain-aware and explains why a brain may start with no conversation
 - settings copy now distinguishes between app-wide fallback model behavior and brain-level model choice
+- inline conversation rename added to the sidebar for multi-brain conversation management
+- sidebar empty state now names the active brain directly when it has no conversations
+- daily log isolation validated across Rosie and Mia
+- knowledge storage isolation validated across Rosie and Mia
+- curator inbox isolation validated across Rosie and Mia
+- transient Brain-view feedback now resets on brain switch so success banners do not leak between brains
 
 ## What The App Can Do Now
 - seed and resolve the baseline Rosie brain
@@ -69,28 +75,27 @@ Phase 3: Brain Selector UX and switching polish
 - restore the latest conversation for the newly selected brain when one exists
 - keep streamed responses attached to the conversation and brain that started them
 - persist a preferred model to the active brain and restore it on switch
-- show clearer brain-aware empty chat guidance when a brain has no conversations yet
+- rename conversations inline from the sidebar
+- show clearer brain-aware empty guidance in chat and sidebar surfaces
 - show the active brain more clearly in Memory, Brain, and sidebar surfaces
 
 ## What Is Still Missing
-- deeper Phase 4 brain-scoped integration checks for curator, daily logs, and knowledge-import surfaces
-- conversation rename improvements for multi-brain management
-- optional brain rename and archive flows
-- final judgment on whether the remaining polish is light enough to mark Phase 3 complete
+- broader Phase 4 stress-testing of brain-scoped workflows beyond the first real validation pass
+- optional archive-brain support if later needed
+- final judgment on whether the remaining polish is light enough to call Phase 3 done and move into Phase 4 officially
 
 ## Current Limits
-The core create, switch, isolate, and brain-level model loop is now working. The main remaining gaps are mostly around deeper workspace-surface validation and a few quality-of-life management flows.
+The core create, switch, isolate, restore, and brain-level model loop is now working. The main remaining gaps are no longer structural. They are mostly confidence, continued validation, and a few optional quality-of-life choices.
 
 ## Next
-- review curator, daily-log, and knowledge-import behavior under real multi-brain switching
-- improve conversation-management polish for multi-brain use
-- decide when Phase 3 is complete enough to call Phase 4 underway
-- evaluate whether the remaining polish is light enough to move into Phase 4
+- decide whether the remaining work is small enough to call Phase 3 complete
+- continue targeted validation of deeper workspace surfaces under real use
+- keep the multi-brain system stable while the wizard and support-brain planning advances
 
 ## Immediate Risks
-- stale frontend state in deeper workspace surfaces that have not yet been stressed as hard as chat switching
-- user confusion if later workspace features still assume a single-brain mental model
-- unfinished management polish making the system feel rougher than the underlying architecture really is
+- stale frontend state in deeper workspace surfaces that have not yet been stressed as hard as chat, memory, and brain switching
+- user confusion if future features assume a single-brain mental model again
+- adding too many new features before the current multi-brain milestone is formally stabilized
 
 ## Guardrails
 - keep v1 narrow
@@ -104,4 +109,4 @@ This phase will feel truly solid when:
 - the user can create and manage multiple brains in the UI without confusion
 - switching between brains is obvious and calm
 - Memory, Brain, and conversations stay isolated without surprises
-- the remaining model, management, and workspace polish no longer makes the app feel experimental
+- the remaining management and workspace polish no longer makes the app feel experimental

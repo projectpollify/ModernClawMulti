@@ -159,3 +159,4 @@ The clean order is:
 - update `MULTI_BRAIN_STATUS.md` before or with each checkpoint commit
 - only change this plan when scope, sequencing, or priorities materially shift
 - keep the status doc as the day-to-day source of truth and keep this plan as the stable roadmap
+
