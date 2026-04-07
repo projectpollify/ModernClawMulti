@@ -55,4 +55,8 @@ export const agentApi = {
       },
     });
   },
+
+  async deleteAgent(agentId: string): Promise<void> {
+    return invoke('agent_delete', { agentId });
+  },
 };

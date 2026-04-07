@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { getDefaultVoicePaths } from '@/lib/voicePaths';
 import { memoryApi } from '@/services/memory';
 import { settingsApi } from '@/services/settings';
-import { DEFAULT_SETTINGS, type AppSettings } from '@/types/settings';
+import { DEFAULT_SETTINGS, normalizeDefaultModel, type AppSettings } from '@/types/settings';
 
 interface SettingsState {
   settings: AppSettings;
@@ -43,12 +43,16 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
         typeof parsed.piperVoicePreset === 'string' && parsed.piperVoicePreset
           ? parsed.piperVoicePreset
           : DEFAULT_SETTINGS.piperVoicePreset;
+      const resolvedDefaultModel = normalizeDefaultModel(
+        typeof parsed.defaultModel === 'string' || parsed.defaultModel === null ? parsed.defaultModel : DEFAULT_SETTINGS.defaultModel
+      );
       const voiceDefaults = getDefaultVoicePaths(resolvedMemoryPath, resolvedVoicePreset);
 
       set({
         settings: {
           ...DEFAULT_SETTINGS,
           ...parsed,
+          defaultModel: resolvedDefaultModel,
           memoryPath: resolvedMemoryPath,
           piperVoicePreset: resolvedVoicePreset,
           piperExecutablePath:

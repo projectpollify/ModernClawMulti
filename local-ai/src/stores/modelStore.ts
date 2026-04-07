@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { ollamaApi, type Model, type OllamaStatus } from '@/services/ollama';
 
 interface ModelState {
@@ -22,7 +23,7 @@ export const useModelStore = create<ModelState>()(
   persist(
     (set, get) => ({
       models: [],
-      currentModel: 'nchapman/dolphin3.0-qwen2.5:3b',
+      currentModel: DEFAULT_FLOOR_MODEL,
       ollamaStatus: null,
       isLoading: false,
       downloadingModel: null,
@@ -48,8 +49,11 @@ export const useModelStore = create<ModelState>()(
           const models = await ollamaApi.listModels();
           const currentModel = get().currentModel;
           const modelNames = new Set(models.map((model) => model.name));
-          const nextCurrentModel =
-            currentModel && modelNames.has(currentModel) ? currentModel : models[0]?.name ?? null;
+          const nextCurrentModel = modelNames.has(DEFAULT_FLOOR_MODEL)
+            ? DEFAULT_FLOOR_MODEL
+            : currentModel && modelNames.has(currentModel)
+              ? currentModel
+              : models[0]?.name ?? null;
 
           set({
             models,

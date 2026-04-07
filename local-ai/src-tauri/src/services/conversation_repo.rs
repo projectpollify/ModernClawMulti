@@ -117,6 +117,12 @@ impl<'a> ConversationRepository<'a> {
         Ok(())
     }
 
+    pub fn delete_for_agent(&self, agent_id: &str) -> Result<(), String> {
+        self.db
+            .execute("DELETE FROM conversations WHERE agent_id = ?1", &[&agent_id])?;
+        Ok(())
+    }
+
     pub fn search_for_agent(&self, agent_id: &str, query: &str, limit: Option<i32>) -> Result<Vec<Conversation>, String> {
         let limit = limit.unwrap_or(20);
         let pattern = format!("%{}%", query);

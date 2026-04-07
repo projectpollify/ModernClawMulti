@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { DEFAULT_FLOOR_MODEL, OPTIONAL_FALLBACK_MODEL } from '@/lib/voiceCatalog';
+import { DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { cn } from '@/lib/utils';
 import { useModelStore } from '@/stores/modelStore';
 
@@ -12,15 +12,9 @@ interface ModelStepProps {
 const RECOMMENDED_MODELS = [
   {
     name: DEFAULT_FLOOR_MODEL,
-    size: '1.9GB',
-    description: 'Voice-first floor setup for ModernClaw. Fast enough for everyday chat and local speech features.',
+    size: '9.6GB',
+    description: 'Primary Gemma 4 setup for ModernClawMulti. Use this lane while we prove multi-brain behavior and quality.',
     recommended: true,
-  },
-  {
-    name: OPTIONAL_FALLBACK_MODEL,
-    size: '4.9GB',
-    description: 'Optional stronger Dolphin model if you want deeper responses and your hardware can carry it.',
-    recommended: false,
   },
 ];
 
@@ -50,7 +44,7 @@ export function ModelStep({ onNext, onBack }: ModelStepProps) {
     <StepShell
       eyebrow="Step 2"
       title="Choose a Model"
-      description="Install the supported floor model so ModernClaw has a fast, voice-friendly baseline. You can keep the 8B Dolphin model as an optional fallback later."
+      description="Install the primary Gemma 4 model so ModernClawMulti has one strong default lane while we test multi-brain behavior."
       onBack={onBack}
       onNext={onNext}
       nextDisabled={!hasModels}

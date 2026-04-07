@@ -6,7 +6,7 @@ use std::io::Error as IoError;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use commands::agents::{agent_create, agent_get_active, agent_list, agent_set_active};
+use commands::agents::{agent_create, agent_delete, agent_get_active, agent_list, agent_set_active};
 use commands::chat::{
     build_context, chat_send, check_ollama_status, delete_model, list_models, pull_model, AppState,
 };
@@ -109,6 +109,7 @@ pub fn run() {
             agent_get_active,
             agent_set_active,
             agent_create,
+            agent_delete,
             conversation_create,
             conversation_list,
             conversation_get,
@@ -142,3 +143,6 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+
+

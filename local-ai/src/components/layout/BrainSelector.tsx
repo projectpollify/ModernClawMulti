@@ -40,6 +40,7 @@ export function BrainSelector() {
   const storeError = useAgentStore((state) => state.error);
   const setActiveAgent = useAgentStore((state) => state.setActiveAgent);
   const createAgent = useAgentStore((state) => state.createAgent);
+  const deleteAgent = useAgentStore((state) => state.deleteAgent);
   const currentModel = useModelStore((state) => state.currentModel);
 
   const [isCreating, setIsCreating] = useState(false);
@@ -47,10 +48,24 @@ export function BrainSelector() {
   const [brainPurpose, setBrainPurpose] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const value = activeAgent?.agentId ?? '';
   const existingIds = useMemo(() => agents.map((agent) => agent.agentId), [agents]);
+  const normalizedExistingNames = useMemo(
+    () => new Set(agents.map((agent) => agent.name.trim().toLowerCase())),
+    [agents]
+  );
+  const duplicateNameCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const agent of agents) {
+      counts.set(agent.name, (counts.get(agent.name) ?? 0) + 1);
+    }
+    return counts;
+  }, [agents]);
   const suggestedId = uniqueBrainId(slugifyBrainName(brainName), existingIds);
+  const canDeleteActiveBrain = Boolean(activeAgent && activeAgent.agentId !== 'default' && agents.length > 1);
+  const optionStyle = { color: '#0f172a', backgroundColor: '#ffffff' };
 
   const handleCreateBrain = async () => {
     const trimmedName = brainName.trim();
@@ -58,6 +73,11 @@ export function BrainSelector() {
 
     if (!trimmedName) {
       setLocalError('Give the new brain a name first.');
+      return;
+    }
+
+    if (normalizedExistingNames.has(trimmedName.toLowerCase())) {
+      setLocalError('That brain name is already in use. Pick a different display name so the selector stays clear.');
       return;
     }
 
@@ -87,6 +107,31 @@ export function BrainSelector() {
     }
   };
 
+  const handleDeleteBrain = async () => {
+    if (!activeAgent || !canDeleteActiveBrain) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete brain "${activeAgent.name}"?\n\nThis will remove its conversations and local workspace files. This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setLocalError(null);
+
+    try {
+      await deleteAgent(activeAgent.agentId);
+    } catch (error) {
+      setLocalError(String(error));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="relative flex items-center gap-2">
       <div className="flex min-w-[240px] items-center gap-3 rounded-2xl border border-border bg-secondary/60 px-3 py-2 backdrop-blur">
@@ -108,11 +153,16 @@ export function BrainSelector() {
             aria-label="Select active brain"
           >
             {agents.length ? null : <option value="">Loading brains...</option>}
-            {agents.map((agent) => (
-              <option key={agent.agentId} value={agent.agentId}>
-                {agent.name}
-              </option>
-            ))}
+            {agents.map((agent) => {
+              const showId = (duplicateNameCounts.get(agent.name) ?? 0) > 1;
+              const optionLabel = showId ? `${agent.name} (${agent.agentId})` : agent.name;
+
+              return (
+                <option key={agent.agentId} value={agent.agentId} style={optionStyle}>
+                  {optionLabel}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
@@ -128,6 +178,18 @@ export function BrainSelector() {
       >
         Create Brain
       </Button>
+
+      {canDeleteActiveBrain ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-xl border-red-500/30 text-red-600 hover:bg-red-500/10 hover:text-red-600"
+          onClick={() => void handleDeleteBrain()}
+          disabled={isDeleting || isLoading}
+        >
+          {isDeleting ? 'Deleting...' : 'Delete Brain'}
+        </Button>
+      ) : null}
 
       {isCreating ? (
         <div className="absolute right-0 top-full z-50 mt-2 w-[340px] rounded-2xl border border-border bg-background p-4 shadow-2xl">
@@ -193,3 +255,5 @@ export function BrainSelector() {
     </div>
   );
 }
+
+

@@ -28,8 +28,9 @@ export const CURATED_PIPER_VOICES: CuratedVoiceOption[] = [
 
 export const DEFAULT_PIPER_VOICE_ID = 'lessac-medium';
 export const DEFAULT_WHISPER_MODEL_FILENAME = 'ggml-base.en.bin';
-export const DEFAULT_FLOOR_MODEL = 'nchapman/dolphin3.0-qwen2.5:3b';
-export const OPTIONAL_FALLBACK_MODEL = 'dolphin3:8b';
+export const DEFAULT_FLOOR_MODEL = 'gemma4:e4b';
+export const LEGACY_FLOOR_MODEL = 'nchapman/dolphin3.0-qwen2.5:3b';
+export const LEGACY_FALLBACK_MODEL = 'dolphin3:8b';
 
 export function getCuratedVoiceById(id: string) {
   return CURATED_PIPER_VOICES.find((voice) => voice.id === id) ?? CURATED_PIPER_VOICES[0];

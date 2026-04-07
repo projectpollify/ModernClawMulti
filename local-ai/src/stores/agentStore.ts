@@ -11,6 +11,7 @@ interface AgentState {
   loadAgents: () => Promise<void>;
   setActiveAgent: (agentId: string) => Promise<void>;
   createAgent: (agent: { agentId: string; name: string; description?: string; defaultModel?: string }) => Promise<void>;
+  deleteAgent: (agentId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -74,6 +75,30 @@ export const useAgentStore = create<AgentState>()((set) => ({
 
     try {
       await agentApi.createAgent(agent);
+      const [agents, activeAgent] = await Promise.all([
+        agentApi.listAgents(),
+        agentApi.getActiveAgent(),
+      ]);
+
+      set({
+        agents,
+        activeAgent,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: String(error),
+      });
+      throw error;
+    }
+  },
+
+  deleteAgent: async (agentId) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      await agentApi.deleteAgent(agentId);
       const [agents, activeAgent] = await Promise.all([
         agentApi.listAgents(),
         agentApi.getActiveAgent(),

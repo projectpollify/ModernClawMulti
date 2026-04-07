@@ -1,3 +1,4 @@
+import { DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useChatStore } from '@/stores/chatStore';
 import { useViewStore } from '@/stores/uiStore';
@@ -9,7 +10,7 @@ export function NewChatButton() {
   const setView = useViewStore((state) => state.setView);
 
   const handleNewChat = async () => {
-    const conversationId = await createConversation(currentModel || 'nchapman/dolphin3.0-qwen2.5:3b');
+    const conversationId = await createConversation(currentModel || DEFAULT_FLOOR_MODEL);
     newConversation(conversationId);
     setView('chat');
   };

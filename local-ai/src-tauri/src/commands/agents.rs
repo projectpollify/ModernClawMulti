@@ -1,8 +1,12 @@
+use std::fs;
+use std::path::Path;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::services::agent_repo::AgentRepository;
+use crate::services::agent_repo::{AgentRepository, DEFAULT_AGENT_ID};
+use crate::services::conversation_repo::ConversationRepository;
 use crate::types::Agent;
 use crate::{DatabaseState, MemoryState};
 
@@ -97,4 +101,52 @@ pub async fn agent_create(
     service.initialize()?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn agent_delete(
+    db_state: State<'_, DatabaseState>,
+    memory_state: State<'_, MemoryState>,
+    agent_id: String,
+) -> Result<(), String> {
+    let repo = AgentRepository::new(&db_state.db);
+    repo.ensure_default_agent(&memory_state.root_path)?;
+
+    if agent_id == DEFAULT_AGENT_ID {
+        return Err("The Rosie baseline brain cannot be deleted in this version.".to_string());
+    }
+
+    let agents = repo.list()?;
+    if agents.len() <= 1 {
+        return Err("You cannot delete the only remaining brain.".to_string());
+    }
+
+    let target = repo
+        .get(&agent_id)?
+        .ok_or_else(|| format!("Agent not found: {}", agent_id))?;
+
+    let active_agent_id = repo.get_active_agent_id()?;
+    if active_agent_id == agent_id {
+        let replacement = agents
+            .iter()
+            .find(|agent| agent.agent_id != agent_id)
+            .ok_or_else(|| "No replacement brain available.".to_string())?;
+        repo.set_active_agent(&replacement.agent_id)?;
+    }
+
+    let conversation_repo = ConversationRepository::new(&db_state.db);
+    conversation_repo.delete_for_agent(&agent_id)?;
+    repo.delete(&agent_id)?;
+
+    if is_managed_agent_workspace(&memory_state.root_path, &target.workspace_path) {
+        fs::remove_dir_all(&target.workspace_path)
+            .map_err(|error| format!("Failed to remove brain workspace: {}", error))?;
+    }
+
+    Ok(())
+}
+
+fn is_managed_agent_workspace(root_path: &str, workspace_path: &str) -> bool {
+    let managed_root = Path::new(root_path).join("agents");
+    Path::new(workspace_path).starts_with(managed_root)
 }

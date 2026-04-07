@@ -1,4 +1,4 @@
-import { DEFAULT_FLOOR_MODEL, DEFAULT_PIPER_VOICE_ID } from '@/lib/voiceCatalog';
+import { DEFAULT_FLOOR_MODEL, DEFAULT_PIPER_VOICE_ID, LEGACY_FALLBACK_MODEL, LEGACY_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import type { Theme } from '@/types';
 
 export interface AppSettings {
@@ -19,6 +19,14 @@ export interface AppSettings {
   whisperExecutablePath: string;
   whisperModelPath: string;
   whisperLanguage: string;
+}
+
+export function normalizeDefaultModel(model: string | null | undefined) {
+  if (!model || model === LEGACY_FLOOR_MODEL || model === LEGACY_FALLBACK_MODEL) {
+    return DEFAULT_FLOOR_MODEL;
+  }
+
+  return model;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {

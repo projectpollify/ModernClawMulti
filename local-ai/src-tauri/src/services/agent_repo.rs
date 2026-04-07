@@ -5,6 +5,14 @@ use chrono::{DateTime, Utc};
 use crate::services::database::Database;
 use crate::types::Agent;
 
+pub const DEFAULT_AGENT_ID: &str = "default";
+pub const DEFAULT_AGENT_NAME: &str = "Rosie";
+const DEFAULT_AGENT_DESCRIPTION: &str = "Baseline ModernClawMulti workspace running on the primary Gemma 4 lane";
+const DEFAULT_AGENT_MODEL: &str = "gemma4:e4b";
+const LEGACY_DEFAULT_AGENT_NAME: &str = "Default Brain";
+const PREVIOUS_DEFAULT_AGENT_NAME: &str = "Gemma 4";
+const LEGACY_DEFAULT_AGENT_MODEL: &str = "nchapman/dolphin3.0-qwen2.5:3b";
+
 pub struct AgentRepository<'a> {
     db: &'a Database,
 }
@@ -90,10 +98,15 @@ impl<'a> AgentRepository<'a> {
         )
     }
 
+    pub fn delete(&self, agent_id: &str) -> Result<(), String> {
+        self.db.execute("DELETE FROM agents WHERE agent_id = ?1", &[&agent_id])?;
+        Ok(())
+    }
+
     pub fn ensure_default_agent(&self, default_workspace_path: &str) -> Result<(), String> {
         let now = Utc::now().to_rfc3339();
-        let default_name = "Default Brain";
         let default_status = "active";
+        let legacy_description = "Migrated baseline single-brain workspace";
 
         self.db.execute(
             r#"
@@ -110,12 +123,12 @@ impl<'a> AgentRepository<'a> {
             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
             "#,
             &[
-                &"default",
-                &default_name,
-                &Some("Migrated baseline single-brain workspace".to_string()),
+                &DEFAULT_AGENT_ID,
+                &DEFAULT_AGENT_NAME,
+                &Some(DEFAULT_AGENT_DESCRIPTION.to_string()),
                 &default_status,
                 &default_workspace_path,
-                &Option::<String>::None,
+                &Some(DEFAULT_AGENT_MODEL.to_string()),
                 &now,
                 &now,
             ],
@@ -125,14 +138,37 @@ impl<'a> AgentRepository<'a> {
             r#"
             UPDATE agents
             SET workspace_path = ?1,
-                updated_at = ?2
-            WHERE agent_id = 'default'
+                name = CASE
+                    WHEN name = ?2 OR name = ?3 THEN ?4
+                    ELSE name
+                END,
+                description = CASE
+                    WHEN description IS NULL OR description = '' OR description = ?5 THEN ?6
+                    ELSE description
+                END,
+                default_model = CASE
+                    WHEN default_model IS NULL OR default_model = '' OR default_model = ?7 THEN ?8
+                    ELSE default_model
+                END,
+                updated_at = ?9
+            WHERE agent_id = ?10
             "#,
-            &[&default_workspace_path, &now],
+            &[
+                &default_workspace_path,
+                &LEGACY_DEFAULT_AGENT_NAME,
+                &PREVIOUS_DEFAULT_AGENT_NAME,
+                &DEFAULT_AGENT_NAME,
+                &legacy_description,
+                &DEFAULT_AGENT_DESCRIPTION,
+                &LEGACY_DEFAULT_AGENT_MODEL,
+                &DEFAULT_AGENT_MODEL,
+                &now,
+                &DEFAULT_AGENT_ID,
+            ],
         )?;
 
         if self.db.get_setting("active_agent_id")?.is_none() {
-            self.db.set_setting("active_agent_id", "default")?;
+            self.db.set_setting("active_agent_id", DEFAULT_AGENT_ID)?;
         }
 
         Ok(())
@@ -142,7 +178,7 @@ impl<'a> AgentRepository<'a> {
         Ok(self
             .db
             .get_setting("active_agent_id")?
-            .unwrap_or_else(|| "default".to_string()))
+            .unwrap_or_else(|| DEFAULT_AGENT_ID.to_string()))
     }
 
     pub fn set_active_agent(&self, agent_id: &str) -> Result<(), String> {
@@ -162,8 +198,8 @@ impl<'a> AgentRepository<'a> {
             return Ok(agent);
         }
 
-        self.db.set_setting("active_agent_id", "default")?;
-        self.get("default")?
+        self.db.set_setting("active_agent_id", DEFAULT_AGENT_ID)?;
+        self.get(DEFAULT_AGENT_ID)?
             .ok_or_else(|| "Default agent could not be resolved".to_string())
     }
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ModelCard } from '@/components/models/ModelCard';
 import { ModelDownloader } from '@/components/models/ModelDownloader';
-import { CURATED_PIPER_VOICES, DEFAULT_FLOOR_MODEL, OPTIONAL_FALLBACK_MODEL } from '@/lib/voiceCatalog';
+import { CURATED_PIPER_VOICES, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { getDefaultVoicePaths } from '@/lib/voicePaths';
 import { cn } from '@/lib/utils';
 import { useOnboardingStore } from '@/stores/onboardingStore';
@@ -88,14 +88,8 @@ export function SettingsView() {
       {
         name: DEFAULT_FLOOR_MODEL,
         label: installedNames.has(DEFAULT_FLOOR_MODEL)
-          ? `${DEFAULT_FLOOR_MODEL} (floor setup, installed)`
-          : `${DEFAULT_FLOOR_MODEL} (floor setup)`,
-      },
-      {
-        name: OPTIONAL_FALLBACK_MODEL,
-        label: installedNames.has(OPTIONAL_FALLBACK_MODEL)
-          ? `${OPTIONAL_FALLBACK_MODEL} (fallback, installed)`
-          : `${OPTIONAL_FALLBACK_MODEL} (fallback)`,
+          ? `${DEFAULT_FLOOR_MODEL} (primary lane, installed)`
+          : `${DEFAULT_FLOOR_MODEL} (primary lane)`,
       },
     ];
     const seen = new Set<string>();
@@ -225,7 +219,7 @@ export function SettingsView() {
             <SettingsSection title="Model">
               <SettingRow
                 label="Default Model"
-                description="ModernClaw is tuned around a fast 3B floor model. Keep the 8B Dolphin model as an optional fallback if your machine has headroom."
+                description="ModernClawMulti is currently tuned around Gemma 4 as the primary test lane. Keep the model setup simple while we validate multi-brain behavior."
               >
                 <select
                   value={settings.defaultModel ?? ''}
@@ -243,7 +237,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Context Window"
-                description="Controls how much memory and history are packed into each prompt. The floor setup stays happiest in the moderate range."
+                description="Controls how much memory and history are packed into each prompt. Gemma 4 stays happiest when this remains moderate unless you are intentionally testing longer contexts."
               >
                 <select
                   value={settings.contextWindowSize}
@@ -657,3 +651,5 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boo
     </button>
   );
 }
+
+

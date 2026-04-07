@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { DEFAULT_FLOOR_MODEL, OPTIONAL_FALLBACK_MODEL } from '@/lib/voiceCatalog';
+import { DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { cn } from '@/lib/utils';
 import { useModelStore } from '@/stores/modelStore';
 
 const POPULAR_MODELS = [
-  { name: DEFAULT_FLOOR_MODEL, size: '1.9GB', desc: 'ModernClaw floor setup. Fast local baseline for voice-first use.' },
-  { name: OPTIONAL_FALLBACK_MODEL, size: '4.9GB', desc: 'Optional stronger Dolphin model if your machine has headroom.' },
+  { name: DEFAULT_FLOOR_MODEL, size: '9.6GB', desc: 'Primary ModernClawMulti model. Stronger quality lane for multi-brain and personality testing.' },
 ];
 
 export function ModelDownloader() {
@@ -20,8 +19,7 @@ export function ModelDownloader() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-background/70 p-4 text-sm text-muted-foreground">
-        ModernClaw is tuned around one proven 3B floor model. Keep the 8B Dolphin model as an optional fallback, and use
-        custom downloads only if you want to go beyond the supported floor setup.
+        ModernClawMulti is currently tuned around one primary Gemma 4 lane. Keep the experiment focused there for now, and only pull custom models if you are intentionally testing beyond the supported setup.
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -48,7 +46,7 @@ export function ModelDownloader() {
           type="text"
           value={customModel}
           onChange={(event) => setCustomModel(event.target.value)}
-          placeholder="Optional custom model, e.g. dolphin3:8b"
+          placeholder="Optional custom model, e.g. llama3.1:8b"
           className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
         />
         <button
