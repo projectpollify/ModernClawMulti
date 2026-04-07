@@ -96,14 +96,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     let fullContent = '';
     let didCompleteStream = false;
 
+    const isConversationVisible = () => get().currentConversationId === conversationId;
+
     const finalizeAssistantMessage = (errorMessage: string | null = null) => {
       if (!fullContent.trim()) {
-        set({
-          isLoading: false,
-          isStreaming: false,
-          streamingContent: '',
-          error: errorMessage ?? 'No response received from Ollama.',
-        });
+        if (isConversationVisible()) {
+          set({
+            isLoading: false,
+            isStreaming: false,
+            streamingContent: '',
+            error: errorMessage ?? 'No response received from Ollama.',
+          });
+        }
         return;
       }
 
@@ -117,17 +121,26 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
       finalizedAssistantMessage = assistantMessage;
 
-      set((state) => ({
-        messages: [...state.messages, assistantMessage],
-        messagesByConversation: {
-          ...state.messagesByConversation,
-          [conversationId]: [...state.messages, assistantMessage],
-        },
-        isLoading: false,
-        isStreaming: false,
-        streamingContent: '',
-        error: errorMessage,
-      }));
+      set((state) => {
+        const existingConversationMessages = state.messagesByConversation[conversationId] ?? nextMessages;
+        const updatedConversationMessages = [...existingConversationMessages, assistantMessage];
+        const nextState: Partial<ChatState> = {
+          messagesByConversation: {
+            ...state.messagesByConversation,
+            [conversationId]: updatedConversationMessages,
+          },
+        };
+
+        if (state.currentConversationId === conversationId) {
+          nextState.messages = updatedConversationMessages;
+          nextState.isLoading = false;
+          nextState.isStreaming = false;
+          nextState.streamingContent = '';
+          nextState.error = errorMessage;
+        }
+
+        return nextState as ChatState;
+      });
     };
 
     try {
@@ -153,7 +166,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         (chunk: ChatResponse) => {
           if (chunk.message?.content) {
             fullContent += chunk.message.content;
-            if (appSettings.streamResponses) {
+            if (appSettings.streamResponses && isConversationVisible()) {
               set({
                 streamingContent: fullContent,
                 isStreaming: true,
@@ -190,12 +203,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         return;
       }
 
-      set({
-        isLoading: false,
-        isStreaming: false,
-        streamingContent: '',
-        error: String(error),
-      });
+      if (isConversationVisible()) {
+        set({
+          isLoading: false,
+          isStreaming: false,
+          streamingContent: '',
+          error: String(error),
+        });
+      }
     }
   },
 

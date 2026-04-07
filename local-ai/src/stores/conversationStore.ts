@@ -10,6 +10,7 @@ interface ConversationState {
   loadConversations: () => Promise<void>;
   createConversation: (model: string) => Promise<string>;
   selectConversation: (id: string | null) => Promise<void>;
+  restoreLatestConversation: () => Promise<void>;
   updateConversation: (id: string, updates: Partial<Conversation>) => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
   renameConversation: (id: string, title: string) => Promise<void>;
@@ -71,6 +72,17 @@ export const useConversationStore = create<ConversationState>()((set, get) => ({
 
     set({ currentId: id });
     useChatStore.getState().loadConversation(id, messages);
+  },
+
+  restoreLatestConversation: async () => {
+    const latestConversation = get().getRecentConversations(1)[0];
+
+    if (!latestConversation) {
+      await get().selectConversation(null);
+      return;
+    }
+
+    await get().selectConversation(latestConversation.id);
   },
 
   updateConversation: async (id, updates) => {

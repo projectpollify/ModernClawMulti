@@ -24,6 +24,7 @@ function App() {
   const activeAgent = useAgentStore((state) => state.activeAgent);
   const hasLoadedAgents = useAgentStore((state) => state.hasLoaded);
   const loadConversations = useConversationStore((state) => state.loadConversations);
+  const restoreLatestConversation = useConversationStore((state) => state.restoreLatestConversation);
   const clearConversations = useConversationStore((state) => state.clearConversations);
   const initializeMemory = useMemoryStore((state) => state.initialize);
   const currentModel = useModelStore((state) => state.currentModel);
@@ -62,15 +63,20 @@ function App() {
       return;
     }
 
-    setActiveBrain(activeAgent.agentId);
-    clearConversations();
-    void initializeMemory();
+    const syncActiveBrain = async () => {
+      setActiveBrain(activeAgent.agentId);
+      clearConversations();
+      await initializeMemory();
 
-    if (settings.saveConversationHistory) {
-      void loadConversations();
-    }
+      if (settings.saveConversationHistory) {
+        await loadConversations();
+        await restoreLatestConversation();
+      }
 
-    setCurrentModel(activeAgent.defaultModel ?? settings.defaultModel ?? null);
+      setCurrentModel(activeAgent.defaultModel ?? settings.defaultModel ?? null);
+    };
+
+    void syncActiveBrain();
   }, [
     activeAgent,
     clearConversations,
@@ -78,6 +84,7 @@ function App() {
     hasLoadedSettings,
     initializeMemory,
     loadConversations,
+    restoreLatestConversation,
     setActiveBrain,
     setCurrentModel,
     settings.defaultModel,
