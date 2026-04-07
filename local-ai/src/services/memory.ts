@@ -87,11 +87,11 @@ export const memoryApi = {
   },
 
   async importCuratorPackage(folderName: string): Promise<string> {
-    return invoke('memory_import_curator_package', { folder_name: folderName });
+    return invoke('memory_import_curator_package', { folderName });
   },
 
   async rejectCuratorPackage(folderName: string): Promise<void> {
-    return invoke('memory_reject_curator_package', { folder_name: folderName });
+    return invoke('memory_reject_curator_package', { folderName });
   },
 
   async loadContext(): Promise<MemoryContext> {
@@ -106,3 +106,4 @@ export const memoryApi = {
     return invoke('memory_open_folder');
   },
 };
+

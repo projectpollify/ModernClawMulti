@@ -68,6 +68,9 @@ Phase 4: Full Workspace Integration
 - Daily Logs UI now explicitly indicates entries belong to the active brain
 - Knowledge Files UI now explicitly indicates files belong to the active brain
 - deeper workspace surfaces now feel visibly brain-scoped, not just technically scoped
+- Settings now reload with the active brain so workspace path information updates correctly on switch
+- curator import and reject actions were fixed after a Tauri payload mismatch blocked the buttons
+- curator import was re-validated end to end and imported knowledge stays isolated to the correct brain
 
 ## What The App Can Do Now
 - seed and resolve the baseline Rosie brain
@@ -85,10 +88,13 @@ Phase 4: Full Workspace Integration
 - show clearer brain-aware empty guidance in chat and sidebar surfaces
 - show the active brain more clearly in Memory, Brain, Curator, Daily Logs, Knowledge Files, and sidebar surfaces
 - keep Brain and daily-log draft surfaces from carrying stale state across brain switches
+- keep Settings workspace information aligned with the currently active brain
+- import staged curator knowledge into the correct brain workspace without cross-brain bleed
 
 ## What Is Still Missing
 - broader Phase 4 stress-testing of all remaining brain-scoped workflows under real use
 - final review of whether any hidden single-brain assumptions remain in less frequently used surfaces
+- future product decision on whether voice/tool paths should remain global or become brain-specific
 - optional archive-brain support if later needed
 - eventual decision on when the project is stable enough to begin the wizard and support-brain layers
 
@@ -118,5 +124,6 @@ Phase 4 will feel healthy when:
 - every major workspace surface behaves as obviously brain-scoped
 - remaining hidden bleed risks are squeezed out through real use
 - new feature work can rely on stable multi-brain truths instead of assumptions
+
 
 

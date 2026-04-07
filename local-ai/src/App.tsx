@@ -61,7 +61,7 @@ function App() {
     const syncActiveBrain = async () => {
       setActiveBrain(activeAgentId);
       clearConversations();
-      await initializeMemory();
+      await Promise.all([initializeMemory(), loadSettings()]);
 
       if (settings.saveConversationHistory) {
         await loadConversations();
@@ -141,3 +141,4 @@ function PlaceholderView({ activeView }: { activeView: string }) {
 }
 
 export default App;
+
