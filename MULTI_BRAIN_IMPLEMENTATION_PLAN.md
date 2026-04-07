@@ -109,6 +109,10 @@ The safest first move is to register the current workspace as the initial defaul
 - show active brain in shell/header
 - add `Create Brain` flow
 - generate starter workspace files for new brain
+- restore the latest conversation when switching into a brain that already has chat history
+- keep streamed responses attached to the brain and conversation that started them
+- add safe delete-brain support for non-baseline brains
+- keep baseline/default mechanics internal instead of making them a user-facing concept
 
 ### Phase 4: Full Workspace Integration
 - Memory view becomes brain-scoped
@@ -118,10 +122,11 @@ The safest first move is to register the current workspace as the initial defaul
 - knowledge import becomes brain-scoped
 
 ### Phase 5: Quality Of Life
-- conversation rename
+- conversation rename improvements for multi-brain management
 - brain rename
 - archive brain
-- optional per-brain default model
+- stronger empty-state guidance for new brains
+- clearer per-brain default-model behavior
 
 ## Hardest Technical Areas
 - workspace resolution
@@ -129,6 +134,7 @@ The safest first move is to register the current workspace as the initial defaul
 - persistence migration
 - Brain builder state isolation
 - keeping the user oriented in the UI
+- model ownership clarity between global settings and the active brain
 
 ## V1 Acceptance Criteria
 - default single-brain behavior still works
@@ -137,6 +143,8 @@ The safest first move is to register the current workspace as the initial defaul
 - conversations do not bleed between brains
 - memory files do not bleed between brains
 - Brain workflows remain isolated per brain
+- switching to an existing brain returns the user to a real conversation instead of an unnecessary blank chat
+- switching brains during a streamed response does not leak output into the wrong brain
 
 ## Build Discipline
 Do not widen scope until the previous phase feels solid.
@@ -146,3 +154,8 @@ The clean order is:
 3. UX
 4. deeper integration
 5. polish
+
+## Documentation Discipline
+- update `MULTI_BRAIN_STATUS.md` before or with each checkpoint commit
+- only change this plan when scope, sequencing, or priorities materially shift
+- keep the status doc as the day-to-day source of truth and keep this plan as the stable roadmap

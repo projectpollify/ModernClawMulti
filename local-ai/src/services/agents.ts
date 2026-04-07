@@ -56,6 +56,10 @@ export const agentApi = {
     });
   },
 
+  async updateDefaultModel(agentId: string, defaultModel: string | null): Promise<void> {
+    return invoke('agent_update_default_model', { agentId, defaultModel });
+  },
+
   async deleteAgent(agentId: string): Promise<void> {
     return invoke('agent_delete', { agentId });
   },

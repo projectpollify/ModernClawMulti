@@ -11,11 +11,12 @@ interface AgentState {
   loadAgents: () => Promise<void>;
   setActiveAgent: (agentId: string) => Promise<void>;
   createAgent: (agent: { agentId: string; name: string; description?: string; defaultModel?: string }) => Promise<void>;
+  updateActiveAgentDefaultModel: (defaultModel: string | null) => Promise<void>;
   deleteAgent: (agentId: string) => Promise<void>;
   clearError: () => void;
 }
 
-export const useAgentStore = create<AgentState>()((set) => ({
+export const useAgentStore = create<AgentState>()((set, get) => ({
   agents: [],
   activeAgent: null,
   isLoading: false,
@@ -83,6 +84,35 @@ export const useAgentStore = create<AgentState>()((set) => ({
       set({
         agents,
         activeAgent,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: String(error),
+      });
+      throw error;
+    }
+  },
+
+  updateActiveAgentDefaultModel: async (defaultModel) => {
+    const activeAgent = get().activeAgent;
+    if (!activeAgent) {
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+
+    try {
+      await agentApi.updateDefaultModel(activeAgent.agentId, defaultModel);
+      const [agents, refreshedActiveAgent] = await Promise.all([
+        agentApi.listAgents(),
+        agentApi.getActiveAgent(),
+      ]);
+
+      set({
+        agents,
+        activeAgent: refreshedActiveAgent,
         isLoading: false,
       });
     } catch (error) {

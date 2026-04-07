@@ -98,6 +98,27 @@ impl<'a> AgentRepository<'a> {
         )
     }
 
+    pub fn update_default_model(&self, agent_id: &str, default_model: Option<&str>) -> Result<(), String> {
+        if self.get(agent_id)?.is_none() {
+            return Err(format!("Agent not found: {}", agent_id));
+        }
+
+        let now = Utc::now().to_rfc3339();
+        let next_model = default_model.map(|value| value.to_string());
+
+        self.db.execute(
+            r#"
+            UPDATE agents
+            SET default_model = ?1,
+                updated_at = ?2
+            WHERE agent_id = ?3
+            "#,
+            &[&next_model, &now, &agent_id],
+        )?;
+
+        Ok(())
+    }
+
     pub fn delete(&self, agent_id: &str) -> Result<(), String> {
         self.db.execute("DELETE FROM agents WHERE agent_id = ?1", &[&agent_id])?;
         Ok(())

@@ -37,6 +37,9 @@ function App() {
   const setTheme = useThemeStore((state) => state.setTheme);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
 
+  const activeAgentId = activeAgent?.agentId ?? null;
+  const activeAgentDefaultModel = activeAgent?.defaultModel ?? null;
+
   useEffect(() => {
     void loadSettings();
     void loadAgents();
@@ -51,20 +54,12 @@ function App() {
   }, [hasLoadedSettings, setTheme, settings.theme]);
 
   useEffect(() => {
-    if (!hasLoadedSettings) {
-      return;
-    }
-
-    setCurrentModel(settings.defaultModel ?? null);
-  }, [hasLoadedSettings, setCurrentModel, settings.defaultModel]);
-
-  useEffect(() => {
-    if (!hasLoadedSettings || !hasLoadedAgents || !activeAgent) {
+    if (!hasLoadedSettings || !hasLoadedAgents || !activeAgentId) {
       return;
     }
 
     const syncActiveBrain = async () => {
-      setActiveBrain(activeAgent.agentId);
+      setActiveBrain(activeAgentId);
       clearConversations();
       await initializeMemory();
 
@@ -72,13 +67,11 @@ function App() {
         await loadConversations();
         await restoreLatestConversation();
       }
-
-      setCurrentModel(activeAgent.defaultModel ?? settings.defaultModel ?? null);
     };
 
     void syncActiveBrain();
   }, [
-    activeAgent,
+    activeAgentId,
     clearConversations,
     hasLoadedAgents,
     hasLoadedSettings,
@@ -86,9 +79,22 @@ function App() {
     loadConversations,
     restoreLatestConversation,
     setActiveBrain,
+    settings.saveConversationHistory,
+  ]);
+
+  useEffect(() => {
+    if (!hasLoadedSettings || !hasLoadedAgents || !activeAgentId) {
+      return;
+    }
+
+    setCurrentModel(activeAgentDefaultModel ?? settings.defaultModel ?? null);
+  }, [
+    activeAgentDefaultModel,
+    activeAgentId,
+    hasLoadedAgents,
+    hasLoadedSettings,
     setCurrentModel,
     settings.defaultModel,
-    settings.saveConversationHistory,
   ]);
 
   useEffect(() => {

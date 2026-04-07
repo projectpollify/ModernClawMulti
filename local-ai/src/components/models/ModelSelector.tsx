@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useAgentStore } from '@/stores/agentStore';
 import { useModelStore } from '@/stores/modelStore';
 
 export function ModelSelector() {
@@ -8,6 +9,7 @@ export function ModelSelector() {
   const ollamaStatus = useModelStore((state) => state.ollamaStatus);
   const checkStatus = useModelStore((state) => state.checkStatus);
   const setCurrentModel = useModelStore((state) => state.setCurrentModel);
+  const updateActiveAgentDefaultModel = useAgentStore((state) => state.updateActiveAgentDefaultModel);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -25,6 +27,17 @@ export function ModelSelector() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleSelectModel = async (modelName: string) => {
+    setCurrentModel(modelName);
+    setIsOpen(false);
+
+    try {
+      await updateActiveAgentDefaultModel(modelName);
+    } catch {
+      void checkStatus();
+    }
+  };
 
   if (!ollamaStatus?.running) {
     return (
@@ -57,6 +70,9 @@ export function ModelSelector() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Installed Models
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Choosing a model here saves it to the active brain.
+            </p>
           </div>
 
           <div className="max-h-72 overflow-y-auto py-1">
@@ -64,10 +80,7 @@ export function ModelSelector() {
               models.map((model) => (
                 <button
                   key={model.name}
-                  onClick={() => {
-                    setCurrentModel(model.name);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => void handleSelectModel(model.name)}
                   className={cn(
                     'flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors',
                     'hover:bg-accent hover:text-accent-foreground',

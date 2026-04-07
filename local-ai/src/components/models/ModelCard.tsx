@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { Model } from '@/services/ollama';
+import { useAgentStore } from '@/stores/agentStore';
 import { useModelStore } from '@/stores/modelStore';
 import { ModelInfo } from './ModelInfo';
 
@@ -12,8 +13,14 @@ export function ModelCard({ model }: ModelCardProps) {
   const currentModel = useModelStore((state) => state.currentModel);
   const setCurrentModel = useModelStore((state) => state.setCurrentModel);
   const deleteModel = useModelStore((state) => state.deleteModel);
+  const updateActiveAgentDefaultModel = useAgentStore((state) => state.updateActiveAgentDefaultModel);
   const [showInfo, setShowInfo] = useState(false);
   const isActive = model.name === currentModel;
+
+  const handleSelect = async () => {
+    setCurrentModel(model.name);
+    await updateActiveAgentDefaultModel(model.name);
+  };
 
   return (
     <div
@@ -28,7 +35,7 @@ export function ModelCard({ model }: ModelCardProps) {
         <div className="min-w-0">
           <h3 className="truncate text-base font-semibold">{model.name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            {model.details.parameter_size || 'Unknown size'} Â·{' '}
+            {model.details.parameter_size || 'Unknown size'} ·{' '}
             {model.details.quantization_level || 'Unknown quantization'}
           </p>
         </div>
@@ -38,13 +45,13 @@ export function ModelCard({ model }: ModelCardProps) {
       <div className="mt-4 flex flex-wrap gap-2">
         {!isActive ? (
           <button
-            onClick={() => setCurrentModel(model.name)}
+            onClick={() => void handleSelect()}
             className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Select
+            Use for This Brain
           </button>
         ) : (
-          <span className="rounded-md px-3 py-1.5 text-sm text-green-600">Active</span>
+          <span className="rounded-md px-3 py-1.5 text-sm text-green-600">Active for This Brain</span>
         )}
 
         <button

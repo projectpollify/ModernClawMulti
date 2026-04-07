@@ -104,6 +104,18 @@ pub async fn agent_create(
 }
 
 #[tauri::command]
+pub async fn agent_update_default_model(
+    db_state: State<'_, DatabaseState>,
+    memory_state: State<'_, MemoryState>,
+    agent_id: String,
+    default_model: Option<String>,
+) -> Result<(), String> {
+    let repo = AgentRepository::new(&db_state.db);
+    repo.ensure_default_agent(&memory_state.root_path)?;
+    repo.update_default_model(&agent_id, default_model.as_deref())
+}
+
+#[tauri::command]
 pub async fn agent_delete(
     db_state: State<'_, DatabaseState>,
     memory_state: State<'_, MemoryState>,

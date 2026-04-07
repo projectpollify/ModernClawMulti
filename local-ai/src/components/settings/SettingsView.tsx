@@ -219,7 +219,7 @@ export function SettingsView() {
             <SettingsSection title="Model">
               <SettingRow
                 label="Default Model"
-                description="ModernClawMulti is currently tuned around Gemma 4 as the primary test lane. Keep the model setup simple while we validate multi-brain behavior."
+                description="This is the app-wide fallback model. If the active brain has its own saved model, that brain-level choice takes priority."
               >
                 <select
                   value={settings.defaultModel ?? ''}
@@ -503,7 +503,7 @@ export function SettingsView() {
                 <div>
                   <h2 className="text-lg font-semibold tracking-tight">Model Management</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Keep the 3B floor model handy. Add the 8B Dolphin fallback only if you want more depth and can spare the speed.
+                    Each brain can keep its own preferred model. Use the header model picker or the model cards below to save the current model to the active brain.
                   </p>
                 </div>
                 <span className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">
@@ -651,5 +651,6 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boo
     </button>
   );
 }
+
 
 
