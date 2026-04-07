@@ -4,6 +4,7 @@ import type { Conversation, Message } from '@/types';
 function toConversationDto(conversation: Conversation) {
   return {
     id: conversation.id,
+    agentId: conversation.agentId,
     title: conversation.title,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
@@ -16,6 +17,7 @@ function toConversationDto(conversation: Conversation) {
 function fromConversationDto(dto: any): Conversation {
   return {
     id: dto.id,
+    agentId: dto.agentId ?? undefined,
     title: dto.title,
     createdAt: new Date(dto.createdAt),
     updatedAt: new Date(dto.updatedAt),

@@ -6,31 +6,40 @@ import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { SettingsView } from '@/components/settings/SettingsView';
 import { useTheme } from '@/hooks/useTheme';
 import { useEffect } from 'react';
+import { useAgentStore } from '@/stores/agentStore';
 import { useChatStore } from '@/stores/chatStore';
 import { useConversationStore } from '@/stores/conversationStore';
+import { useMemoryStore } from '@/stores/memoryStore';
 import { useModelStore } from '@/stores/modelStore';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useSuggestionStore } from '@/stores/suggestionStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useViewStore } from '@/stores/uiStore';
 
 function App() {
   useTheme();
   const activeView = useViewStore((state) => state.activeView);
+  const loadAgents = useAgentStore((state) => state.loadAgents);
+  const activeAgent = useAgentStore((state) => state.activeAgent);
+  const hasLoadedAgents = useAgentStore((state) => state.hasLoaded);
   const loadConversations = useConversationStore((state) => state.loadConversations);
   const clearConversations = useConversationStore((state) => state.clearConversations);
+  const initializeMemory = useMemoryStore((state) => state.initialize);
   const currentModel = useModelStore((state) => state.currentModel);
   const setCurrentModel = useModelStore((state) => state.setCurrentModel);
   const setChatModel = useChatStore((state) => state.setModel);
   const loadSettings = useSettingsStore((state) => state.loadSettings);
   const settings = useSettingsStore((state) => state.settings);
   const hasLoadedSettings = useSettingsStore((state) => state.hasLoaded);
+  const setActiveBrain = useSuggestionStore((state) => state.setActiveBrain);
   const setTheme = useThemeStore((state) => state.setTheme);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
 
   useEffect(() => {
     void loadSettings();
-  }, [loadSettings]);
+    void loadAgents();
+  }, [loadAgents, loadSettings]);
 
   useEffect(() => {
     if (!hasLoadedSettings) {
@@ -49,16 +58,31 @@ function App() {
   }, [hasLoadedSettings, setCurrentModel, settings.defaultModel]);
 
   useEffect(() => {
-    if (!hasLoadedSettings) {
+    if (!hasLoadedSettings || !hasLoadedAgents || !activeAgent) {
       return;
     }
 
+    setActiveBrain(activeAgent.agentId);
+    clearConversations();
+    void initializeMemory();
+
     if (settings.saveConversationHistory) {
       void loadConversations();
-    } else {
-      clearConversations();
     }
-  }, [clearConversations, hasLoadedSettings, loadConversations, settings.saveConversationHistory]);
+
+    setCurrentModel(activeAgent.defaultModel ?? settings.defaultModel ?? null);
+  }, [
+    activeAgent,
+    clearConversations,
+    hasLoadedAgents,
+    hasLoadedSettings,
+    initializeMemory,
+    loadConversations,
+    setActiveBrain,
+    setCurrentModel,
+    settings.defaultModel,
+    settings.saveConversationHistory,
+  ]);
 
   useEffect(() => {
     if (currentModel) {

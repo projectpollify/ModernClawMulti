@@ -6,6 +6,7 @@ use std::io::Error as IoError;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use commands::agents::{agent_create, agent_get_active, agent_list, agent_set_active};
 use commands::chat::{
     build_context, chat_send, check_ollama_status, delete_model, list_models, pull_model, AppState,
 };
@@ -21,6 +22,7 @@ use commands::memory::{
 };
 use commands::settings::{setting_get, setting_set, settings_get_all, settings_reset};
 use commands::voice::{voice_check_input_status, voice_check_status, voice_speak, voice_transcribe};
+use services::agent_repo::AgentRepository;
 use services::database::Database;
 use services::memory::MemoryService;
 use services::ollama::OllamaService;
@@ -58,16 +60,6 @@ fn default_memory_path(app: &tauri::App) -> Result<PathBuf, String> {
     Ok(parent.join(folder_name))
 }
 
-fn setup_memory(app: &tauri::App) -> Result<MemoryState, String> {
-    let base_path = default_memory_path(app)?;
-    let service = MemoryService::new(&base_path.to_string_lossy());
-    service.initialize()?;
-
-    Ok(MemoryState {
-        service: Arc::new(Mutex::new(service)),
-    })
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app_state = AppState {
@@ -79,8 +71,28 @@ pub fn run() {
         .setup(|app| {
             let db_state = setup_database(app)
                 .map_err(|error| IoError::other(format!("Database setup failed: {}", error)))?;
-            let memory_state = setup_memory(app)
+            let default_root_path = default_memory_path(app)
+                .map_err(|error| IoError::other(format!("Memory path resolution failed: {}", error)))?;
+
+            let default_root_path_string = default_root_path.to_string_lossy().to_string();
+            let agent_repo = AgentRepository::new(&db_state.db);
+            agent_repo
+                .ensure_default_agent(&default_root_path_string)
+                .map_err(|error| IoError::other(format!("Agent setup failed: {}", error)))?;
+
+            let active_workspace_path = agent_repo
+                .resolve_active_workspace_path(&default_root_path_string)
+                .map_err(|error| IoError::other(format!("Active workspace resolution failed: {}", error)))?;
+
+            let memory_service = MemoryService::new(&active_workspace_path);
+            memory_service
+                .initialize()
                 .map_err(|error| IoError::other(format!("Memory setup failed: {}", error)))?;
+
+            let memory_state = MemoryState {
+                root_path: default_root_path_string,
+            };
+
             app.manage(db_state);
             app.manage(memory_state);
             Ok(())
@@ -93,6 +105,10 @@ pub fn run() {
             chat_send,
             pull_model,
             delete_model,
+            agent_list,
+            agent_get_active,
+            agent_set_active,
+            agent_create,
             conversation_create,
             conversation_list,
             conversation_get,
@@ -126,4 +142,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

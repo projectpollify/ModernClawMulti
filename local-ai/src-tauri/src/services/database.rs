@@ -50,6 +50,11 @@ impl Database {
                 .map_err(|error| format!("Migration 001 failed: {}", error))?;
         }
 
+        if current_version < 2 {
+            conn.execute_batch(include_str!("../migrations/002_multi_brain_foundations.sql"))
+                .map_err(|error| format!("Migration 002 failed: {}", error))?;
+        }
+
         Ok(())
     }
 

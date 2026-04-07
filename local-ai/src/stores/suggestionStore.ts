@@ -2,11 +2,17 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { BrainActivityEntry, BrainSuggestion, KnowledgeIntakeRecord, SuggestionStatus } from '@/types';
 
-interface SuggestionState {
+interface BrainScopedState {
   suggestions: BrainSuggestion[];
   draftAnswers: Record<string, string>;
   activityLog: BrainActivityEntry[];
   recentKnowledge: KnowledgeIntakeRecord[];
+}
+
+interface SuggestionState extends BrainScopedState {
+  activeBrainId: string;
+  brainStates: Record<string, BrainScopedState>;
+  setActiveBrain: (brainId: string) => void;
   updateStatus: (id: string, status: SuggestionStatus) => void;
   setDraftAnswer: (id: string, value: string) => void;
   clearDraftAnswer: (id: string) => void;
@@ -15,7 +21,7 @@ interface SuggestionState {
   resetSuggestions: () => void;
 }
 
-const initialSuggestions: BrainSuggestion[] = [
+const makeInitialSuggestions = (): BrainSuggestion[] => [
   {
     id: 'profile-role',
     title: 'Clarify your primary role',
@@ -60,69 +66,172 @@ const initialSuggestions: BrainSuggestion[] = [
   },
 ];
 
-const emptyState = {
-  suggestions: initialSuggestions,
+const makeEmptyBrainState = (): BrainScopedState => ({
+  suggestions: makeInitialSuggestions(),
   draftAnswers: {},
   activityLog: [],
   recentKnowledge: [],
-};
+});
+
+const cloneBrainState = (state: BrainScopedState): BrainScopedState => ({
+  suggestions: state.suggestions.map((suggestion) => ({ ...suggestion })),
+  draftAnswers: { ...state.draftAnswers },
+  activityLog: state.activityLog.map((entry) => ({ ...entry })),
+  recentKnowledge: state.recentKnowledge.map((record) => ({ ...record })),
+});
+
+const defaultBrainState = makeEmptyBrainState();
+
+function getBrainState(brainStates: Record<string, BrainScopedState>, brainId: string): BrainScopedState {
+  return brainStates[brainId] ? cloneBrainState(brainStates[brainId]) : makeEmptyBrainState();
+}
+
+function syncBrainState(
+  state: SuggestionState,
+  updater: (current: BrainScopedState) => BrainScopedState
+): Partial<SuggestionState> {
+  const currentBrainState = updater({
+    suggestions: state.suggestions,
+    draftAnswers: state.draftAnswers,
+    activityLog: state.activityLog,
+    recentKnowledge: state.recentKnowledge,
+  });
+
+  return {
+    ...currentBrainState,
+    brainStates: {
+      ...state.brainStates,
+      [state.activeBrainId]: currentBrainState,
+    },
+  };
+}
 
 export const useSuggestionStore = create<SuggestionState>()(
   persist(
     (set) => ({
-      ...emptyState,
-      updateStatus: (id, status) =>
-        set((state) => ({
-          suggestions: state.suggestions.map((suggestion) =>
-            suggestion.id === id ? { ...suggestion, status } : suggestion
-          ),
-        })),
-      setDraftAnswer: (id, value) =>
-        set((state) => ({
-          draftAnswers: {
-            ...state.draftAnswers,
-            [id]: value,
-          },
-        })),
-      clearDraftAnswer: (id) =>
+      activeBrainId: 'default',
+      brainStates: { default: cloneBrainState(defaultBrainState) },
+      ...cloneBrainState(defaultBrainState),
+
+      setActiveBrain: (brainId) =>
         set((state) => {
-          const nextDraftAnswers = { ...state.draftAnswers };
-          delete nextDraftAnswers[id];
-          return { draftAnswers: nextDraftAnswers };
+          const currentState: BrainScopedState = {
+            suggestions: state.suggestions,
+            draftAnswers: state.draftAnswers,
+            activityLog: state.activityLog,
+            recentKnowledge: state.recentKnowledge,
+          };
+
+          const nextBrainStates = {
+            ...state.brainStates,
+            [state.activeBrainId]: currentState,
+          };
+
+          const nextBrainState = getBrainState(nextBrainStates, brainId);
+
+          return {
+            activeBrainId: brainId,
+            brainStates: nextBrainStates[brainId]
+              ? nextBrainStates
+              : { ...nextBrainStates, [brainId]: nextBrainState },
+            ...nextBrainState,
+          };
         }),
+
+      updateStatus: (id, status) =>
+        set((state) =>
+          syncBrainState(state, (current) => ({
+            ...current,
+            suggestions: current.suggestions.map((suggestion) =>
+              suggestion.id === id ? { ...suggestion, status } : suggestion
+            ),
+          }))
+        ),
+
+      setDraftAnswer: (id, value) =>
+        set((state) =>
+          syncBrainState(state, (current) => ({
+            ...current,
+            draftAnswers: {
+              ...current.draftAnswers,
+              [id]: value,
+            },
+          }))
+        ),
+
+      clearDraftAnswer: (id) =>
+        set((state) =>
+          syncBrainState(state, (current) => {
+            const nextDraftAnswers = { ...current.draftAnswers };
+            delete nextDraftAnswers[id];
+            return {
+              ...current,
+              draftAnswers: nextDraftAnswers,
+            };
+          })
+        ),
+
       addActivity: (entry) =>
-        set((state) => ({
-          activityLog: [
-            {
-              ...entry,
-              id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-              createdAt: new Date().toISOString(),
-            },
-            ...state.activityLog,
-          ].slice(0, 30),
-        })),
+        set((state) =>
+          syncBrainState(state, (current) => ({
+            ...current,
+            activityLog: [
+              {
+                ...entry,
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                createdAt: new Date().toISOString(),
+              },
+              ...current.activityLog,
+            ].slice(0, 30),
+          }))
+        ),
+
       addKnowledgeRecord: (record) =>
-        set((state) => ({
-          recentKnowledge: [
-            {
-              ...record,
-              id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-              createdAt: new Date().toISOString(),
+        set((state) =>
+          syncBrainState(state, (current) => ({
+            ...current,
+            recentKnowledge: [
+              {
+                ...record,
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                createdAt: new Date().toISOString(),
+              },
+              ...current.recentKnowledge,
+            ].slice(0, 12),
+          }))
+        ),
+
+      resetSuggestions: () =>
+        set((state) => {
+          const resetState = makeEmptyBrainState();
+          return {
+            ...resetState,
+            brainStates: {
+              ...state.brainStates,
+              [state.activeBrainId]: resetState,
             },
-            ...state.recentKnowledge,
-          ].slice(0, 12),
-        })),
-      resetSuggestions: () => set(emptyState),
+          };
+        }),
     }),
     {
-      name: 'modernclaw-brain-storage',
+      name: 'modernclawmulti-brain-storage',
       partialize: (state) => ({
-        suggestions: state.suggestions,
-        draftAnswers: state.draftAnswers,
-        activityLog: state.activityLog,
-        recentKnowledge: state.recentKnowledge,
+        activeBrainId: state.activeBrainId,
+        brainStates: state.brainStates,
       }),
+      merge: (persisted, current) => {
+        const incoming = (persisted as Partial<SuggestionState>) ?? {};
+        const activeBrainId = incoming.activeBrainId ?? current.activeBrainId;
+        const brainStates = incoming.brainStates ?? current.brainStates;
+        const nextBrainState = getBrainState(brainStates, activeBrainId);
+
+        return {
+          ...current,
+          activeBrainId,
+          brainStates,
+          ...nextBrainState,
+        };
+      },
     }
   )
 );
-

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useAgentStore } from '@/stores/agentStore';
 import { useSidebarStore, useViewStore } from '@/stores/uiStore';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -6,6 +7,7 @@ import { ConversationList } from './ConversationList';
 import { NewChatButton } from './NewChatButton';
 
 export function Sidebar() {
+  const activeAgent = useAgentStore((state) => state.activeAgent);
   const isOpen = useSidebarStore((state) => state.isOpen);
   const open = useSidebarStore((state) => state.open);
   const activeView = useViewStore((state) => state.activeView);
@@ -41,7 +43,7 @@ export function Sidebar() {
           {isOpen ? (
             <div>
               <p className="text-sm font-semibold">ModernClaw</p>
-              <p className="text-xs text-muted-foreground">Private desktop workspace</p>
+              <p className="text-xs text-muted-foreground">{activeAgent ? `${activeAgent.name} workspace` : 'Private desktop workspace'}</p>
             </div>
           ) : null}
         </button>
@@ -218,3 +220,4 @@ function SettingsIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+

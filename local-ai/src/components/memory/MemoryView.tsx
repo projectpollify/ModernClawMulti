@@ -5,9 +5,11 @@ import { KnowledgeFiles } from '@/components/memory/KnowledgeFiles';
 import { MemoryFileCard } from '@/components/memory/MemoryFileCard';
 import { formatCharacterRange, getContentGuidance } from '@/lib/contentGuidance';
 import { memoryApi } from '@/services/memory';
+import { useAgentStore } from '@/stores/agentStore';
 import { useMemoryStore } from '@/stores/memoryStore';
 
 export function MemoryView() {
+  const activeAgent = useAgentStore((state) => state.activeAgent);
   const initialize = useMemoryStore((state) => state.initialize);
   const soul = useMemoryStore((state) => state.soul);
   const user = useMemoryStore((state) => state.user);
@@ -50,6 +52,12 @@ export function MemoryView() {
                 Personality, user context, durable memory, daily logs, and knowledge references all live
                 here as local Markdown files.
               </p>
+              {activeAgent ? (
+                <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-secondary-foreground">
+                  <span className="font-semibold uppercase tracking-[0.16em]">Active Brain</span>
+                  <span>{activeAgent.name}</span>
+                </div>
+              ) : null}
               <p className="mt-3 text-xs leading-6 text-muted-foreground">
                 Writing budgets matter here. Keep files focused so they stay useful in prompt context instead
                 of turning into giant dumping grounds.
@@ -86,6 +94,11 @@ export function MemoryView() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Edit the files that shape how your assistant behaves and what it remembers.
               </p>
+              {activeAgent ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  You are editing the live workspace for <span className="font-medium text-foreground">{activeAgent.name}</span>.
+                </p>
+              ) : null}
             </div>
             {isLoading ? <p className="text-sm text-muted-foreground">Loading memory...</p> : null}
           </div>
@@ -147,3 +160,4 @@ export function MemoryView() {
     </div>
   );
 }
+

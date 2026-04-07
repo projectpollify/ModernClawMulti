@@ -1,6 +1,17 @@
 export type ViewType = 'chat' | 'memory' | 'brain' | 'settings';
 export type Theme = 'light' | 'dark' | 'system';
 
+export interface Agent {
+  agentId: string;
+  name: string;
+  description?: string;
+  status?: string;
+  workspacePath?: string;
+  defaultModel?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -12,6 +23,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
+  agentId?: string;
   title: string;
   createdAt: Date;
   updatedAt: Date;

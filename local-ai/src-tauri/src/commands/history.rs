@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
+use crate::services::agent_repo::AgentRepository;
 use crate::services::{conversation_repo::ConversationRepository, message_repo::MessageRepository};
 use crate::types::{Conversation, Message};
 use crate::DatabaseState;
@@ -47,6 +48,8 @@ impl From<Message> for MessageDto {
 #[serde(rename_all = "camelCase")]
 pub struct ConversationDto {
     pub id: String,
+    #[serde(default)]
+    pub agent_id: Option<String>,
     pub title: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -55,24 +58,11 @@ pub struct ConversationDto {
     pub preview: Option<String>,
 }
 
-impl From<ConversationDto> for Conversation {
-    fn from(value: ConversationDto) -> Self {
-        Self {
-            id: value.id,
-            title: value.title,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
-            model: value.model,
-            message_count: value.message_count,
-            preview: value.preview,
-        }
-    }
-}
-
 impl From<Conversation> for ConversationDto {
     fn from(value: Conversation) -> Self {
         Self {
             id: value.id,
+            agent_id: Some(value.agent_id),
             title: value.title,
             created_at: value.created_at,
             updated_at: value.updated_at,
@@ -88,8 +78,20 @@ pub async fn conversation_create(
     state: State<'_, DatabaseState>,
     conversation: ConversationDto,
 ) -> Result<(), String> {
+    let agent_repo = AgentRepository::new(&state.db);
+    let active_agent_id = agent_repo.get_active_agent_id()?;
     let repo = ConversationRepository::new(&state.db);
-    repo.create(&conversation.into())
+
+    repo.create(&Conversation {
+        id: conversation.id,
+        agent_id: conversation.agent_id.unwrap_or(active_agent_id),
+        title: conversation.title,
+        created_at: conversation.created_at,
+        updated_at: conversation.updated_at,
+        model: conversation.model,
+        message_count: conversation.message_count,
+        preview: conversation.preview,
+    })
 }
 
 #[tauri::command]
@@ -97,8 +99,14 @@ pub async fn conversation_list(
     state: State<'_, DatabaseState>,
     limit: Option<i32>,
 ) -> Result<Vec<ConversationDto>, String> {
+    let agent_repo = AgentRepository::new(&state.db);
+    let active_agent_id = agent_repo.get_active_agent_id()?;
     let repo = ConversationRepository::new(&state.db);
-    Ok(repo.list(limit)?.into_iter().map(Into::into).collect())
+    Ok(repo
+        .list_for_agent(&active_agent_id, limit)?
+        .into_iter()
+        .map(Into::into)
+        .collect())
 }
 
 #[tauri::command]
@@ -138,8 +146,14 @@ pub async fn conversation_search(
     query: String,
     limit: Option<i32>,
 ) -> Result<Vec<ConversationDto>, String> {
+    let agent_repo = AgentRepository::new(&state.db);
+    let active_agent_id = agent_repo.get_active_agent_id()?;
     let repo = ConversationRepository::new(&state.db);
-    Ok(repo.search(&query, limit)?.into_iter().map(Into::into).collect())
+    Ok(repo
+        .search_for_agent(&active_agent_id, &query, limit)?
+        .into_iter()
+        .map(Into::into)
+        .collect())
 }
 
 #[tauri::command]

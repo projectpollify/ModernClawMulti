@@ -4,9 +4,12 @@ use tauri::{AppHandle, Emitter, State};
 use tokio::sync::Mutex;
 
 use super::memory::MemoryState;
+use crate::services::agent_repo::AgentRepository;
 use crate::services::context::ContextBuilder;
+use crate::services::memory::MemoryService;
 use crate::services::ollama::OllamaService;
 use crate::types::{BuildContextResponse, ChatMessage, ChatResponse, Model, OllamaStatus};
+use crate::DatabaseState;
 
 pub struct AppState {
     pub ollama: Arc<Mutex<OllamaService>>,
@@ -27,14 +30,16 @@ pub async fn list_models(state: State<'_, AppState>) -> Result<Vec<Model>, Strin
 #[tauri::command]
 #[allow(non_snake_case)]
 pub async fn build_context(
+    db_state: State<'_, DatabaseState>,
     memory_state: State<'_, MemoryState>,
     maxTokens: Option<usize>,
     conversationHistory: Vec<ChatMessage>,
     userMessage: String,
 ) -> Result<BuildContextResponse, String> {
-    let memory_service = memory_state.service.lock().await;
+    let agent_repo = AgentRepository::new(&db_state.db);
+    let workspace_path = agent_repo.resolve_active_workspace_path(&memory_state.root_path)?;
+    let memory_service = MemoryService::new(&workspace_path);
     let memory_context = memory_service.load_context()?;
-    drop(memory_service);
 
     let context_builder = ContextBuilder::new(maxTokens.unwrap_or(4096));
     let (messages, stats) =

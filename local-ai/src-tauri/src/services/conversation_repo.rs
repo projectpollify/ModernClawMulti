@@ -14,11 +14,12 @@ impl<'a> ConversationRepository<'a> {
     pub fn create(&self, conversation: &Conversation) -> Result<(), String> {
         self.db.execute(
             r#"
-            INSERT INTO conversations (id, title, model, message_count, preview, created_at, updated_at)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+            INSERT INTO conversations (id, agent_id, title, model, message_count, preview, created_at, updated_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
             "#,
             &[
                 &conversation.id,
+                &conversation.agent_id,
                 &conversation.title,
                 &conversation.model,
                 &conversation.message_count,
@@ -33,42 +34,45 @@ impl<'a> ConversationRepository<'a> {
 
     pub fn get(&self, id: &str) -> Result<Option<Conversation>, String> {
         self.db.query_one(
-            "SELECT id, title, model, message_count, preview, created_at, updated_at FROM conversations WHERE id = ?1",
+            "SELECT id, agent_id, title, model, message_count, preview, created_at, updated_at FROM conversations WHERE id = ?1",
             &[&id],
             |row| {
                 Ok(Conversation {
                     id: row.get(0)?,
-                    title: row.get(1)?,
-                    model: row.get(2)?,
-                    message_count: row.get(3)?,
-                    preview: row.get(4)?,
-                    created_at: parse_rfc3339(row.get(5)?)?,
-                    updated_at: parse_rfc3339(row.get(6)?)?,
+                    agent_id: row.get(1)?,
+                    title: row.get(2)?,
+                    model: row.get(3)?,
+                    message_count: row.get(4)?,
+                    preview: row.get(5)?,
+                    created_at: parse_rfc3339(row.get(6)?)?,
+                    updated_at: parse_rfc3339(row.get(7)?)?,
                 })
             },
         )
     }
 
-    pub fn list(&self, limit: Option<i32>) -> Result<Vec<Conversation>, String> {
+    pub fn list_for_agent(&self, agent_id: &str, limit: Option<i32>) -> Result<Vec<Conversation>, String> {
         let limit = limit.unwrap_or(100);
 
         self.db.query_all(
             r#"
-            SELECT id, title, model, message_count, preview, created_at, updated_at
+            SELECT id, agent_id, title, model, message_count, preview, created_at, updated_at
             FROM conversations
+            WHERE agent_id = ?1
             ORDER BY updated_at DESC
-            LIMIT ?1
+            LIMIT ?2
             "#,
-            &[&limit],
+            &[&agent_id, &limit],
             |row| {
                 Ok(Conversation {
                     id: row.get(0)?,
-                    title: row.get(1)?,
-                    model: row.get(2)?,
-                    message_count: row.get(3)?,
-                    preview: row.get(4)?,
-                    created_at: parse_rfc3339(row.get(5)?)?,
-                    updated_at: parse_rfc3339(row.get(6)?)?,
+                    agent_id: row.get(1)?,
+                    title: row.get(2)?,
+                    model: row.get(3)?,
+                    message_count: row.get(4)?,
+                    preview: row.get(5)?,
+                    created_at: parse_rfc3339(row.get(6)?)?,
+                    updated_at: parse_rfc3339(row.get(7)?)?,
                 })
             },
         )
@@ -113,28 +117,29 @@ impl<'a> ConversationRepository<'a> {
         Ok(())
     }
 
-    pub fn search(&self, query: &str, limit: Option<i32>) -> Result<Vec<Conversation>, String> {
+    pub fn search_for_agent(&self, agent_id: &str, query: &str, limit: Option<i32>) -> Result<Vec<Conversation>, String> {
         let limit = limit.unwrap_or(20);
         let pattern = format!("%{}%", query);
 
         self.db.query_all(
             r#"
-            SELECT id, title, model, message_count, preview, created_at, updated_at
+            SELECT id, agent_id, title, model, message_count, preview, created_at, updated_at
             FROM conversations
-            WHERE title LIKE ?1 OR preview LIKE ?1
+            WHERE agent_id = ?1 AND (title LIKE ?2 OR preview LIKE ?2)
             ORDER BY updated_at DESC
-            LIMIT ?2
+            LIMIT ?3
             "#,
-            &[&pattern, &limit],
+            &[&agent_id, &pattern, &limit],
             |row| {
                 Ok(Conversation {
                     id: row.get(0)?,
-                    title: row.get(1)?,
-                    model: row.get(2)?,
-                    message_count: row.get(3)?,
-                    preview: row.get(4)?,
-                    created_at: parse_rfc3339(row.get(5)?)?,
-                    updated_at: parse_rfc3339(row.get(6)?)?,
+                    agent_id: row.get(1)?,
+                    title: row.get(2)?,
+                    model: row.get(3)?,
+                    message_count: row.get(4)?,
+                    preview: row.get(5)?,
+                    created_at: parse_rfc3339(row.get(6)?)?,
+                    updated_at: parse_rfc3339(row.get(7)?)?,
                 })
             },
         )

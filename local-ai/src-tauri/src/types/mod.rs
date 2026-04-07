@@ -68,8 +68,21 @@ pub struct OllamaStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Agent {
+    pub agent_id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub workspace_path: String,
+    pub default_model: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Conversation {
     pub id: String,
+    pub agent_id: String,
     pub title: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
