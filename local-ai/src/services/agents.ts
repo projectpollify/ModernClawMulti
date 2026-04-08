@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Agent } from '@/types';
+import type { Agent, AgentVoiceSettings } from '@/types';
 
 interface AgentDto {
   agentId: string;
@@ -8,6 +8,12 @@ interface AgentDto {
   status?: string;
   workspacePath?: string;
   defaultModel?: string;
+  enableVoiceOutput?: boolean;
+  piperVoicePreset?: string;
+  piperModelPath?: string;
+  enableVoiceInput?: boolean;
+  whisperModelPath?: string;
+  whisperLanguage?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -20,6 +26,12 @@ function fromAgentDto(dto: AgentDto): Agent {
     status: dto.status ?? undefined,
     workspacePath: dto.workspacePath ?? undefined,
     defaultModel: dto.defaultModel ?? undefined,
+    enableVoiceOutput: typeof dto.enableVoiceOutput === 'boolean' ? dto.enableVoiceOutput : undefined,
+    piperVoicePreset: dto.piperVoicePreset ?? undefined,
+    piperModelPath: dto.piperModelPath ?? undefined,
+    enableVoiceInput: typeof dto.enableVoiceInput === 'boolean' ? dto.enableVoiceInput : undefined,
+    whisperModelPath: dto.whisperModelPath ?? undefined,
+    whisperLanguage: dto.whisperLanguage ?? undefined,
     createdAt: dto.createdAt ? new Date(dto.createdAt) : undefined,
     updatedAt: dto.updatedAt ? new Date(dto.updatedAt) : undefined,
   };
@@ -58,6 +70,10 @@ export const agentApi = {
 
   async updateDefaultModel(agentId: string, defaultModel: string | null): Promise<void> {
     return invoke('agent_update_default_model', { agentId, defaultModel });
+  },
+
+  async updateVoiceSettings(agentId: string, voiceSettings: AgentVoiceSettings): Promise<void> {
+    return invoke('agent_update_voice_settings', { agentId, voiceSettings });
   },
 
   async deleteAgent(agentId: string): Promise<void> {

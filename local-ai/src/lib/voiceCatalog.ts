@@ -7,26 +7,20 @@ export interface CuratedVoiceOption {
 
 export const CURATED_PIPER_VOICES: CuratedVoiceOption[] = [
   {
-    id: 'lessac-medium',
-    label: 'Lessac',
-    filename: 'en_US-lessac-medium.onnx',
-    description: 'Neutral, reliable default voice for ModernClaw.',
-  },
-  {
     id: 'amy-medium',
-    label: 'Amy',
+    label: 'Amy (Female)',
     filename: 'en_US-amy-medium.onnx',
-    description: 'Softer voice option for longer listening sessions.',
+    description: 'Softer female voice option for longer listening sessions.',
   },
   {
     id: 'joe-medium',
-    label: 'Joe',
+    label: 'Joe (Male)',
     filename: 'en_US-joe-medium.onnx',
-    description: 'Clear alternative voice with a slightly firmer tone.',
+    description: 'Clear male voice option with a slightly firmer tone.',
   },
 ] as const;
 
-export const DEFAULT_PIPER_VOICE_ID = 'lessac-medium';
+export const DEFAULT_PIPER_VOICE_ID = 'amy-medium';
 export const DEFAULT_WHISPER_MODEL_FILENAME = 'ggml-base.en.bin';
 export const DEFAULT_FLOOR_MODEL = 'gemma4:e4b';
 export const LEGACY_FLOOR_MODEL = 'nchapman/dolphin3.0-qwen2.5:3b';

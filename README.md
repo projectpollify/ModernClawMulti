@@ -1,82 +1,80 @@
-# ModernClaw
+# ModernClawMulti
 
-ModernClaw is a private, local-first brain creator for local AI agents.
+ModernClawMulti is the multi-brain experimental branch of ModernClaw.
 
-This repository tracks the differentiated product line built on top of the earlier Local AI desktop foundation. The app source lives in `local-ai/`, while the repo root holds project docs and private planning material.
+It keeps the local-first brain workspace model, but extends it so users can create, switch, and manage multiple isolated AI brains inside one app.
 
-## Current Product Direction
+## Current Focus
 
-ModernClaw is not just a desktop chat client. It is evolving into a system for building and growing local AI brains through:
-- guided brain setup
-- reviewable Brain suggestions
-- progressive question queues
-- durable memory and knowledge files
-- activity history
-- staged curator imports for research and knowledge growth
-- local voice input and output
-- curated model and voice defaults for a practical local setup
+This repo is currently focused on finishing the multi-brain foundation before wizard and support-brain work begins.
 
-## What Is Implemented Now
+Working now:
+- create brain
+- switch brain
+- delete non-baseline brain
+- restore the latest conversation per brain
+- isolate streamed replies per brain
+- persist model choice per brain
+- isolate Memory, Brain, Curator, Daily Logs, and Knowledge Files per brain
+- support brain-specific voice preferences on top of one shared machine-level Piper and Whisper install
 
-Working in this repo today:
-- Brain suggestions writing into `USER.md` and `MEMORY.md`
-- persistent Brain state across restarts
-- dedicated `Question Queue`
-- accepted / deferred suggestion lifecycle
-- richer knowledge intake with summary, source, and tags
-- recent Brain activity timeline
-- guided Brain setup for `SOUL.md`, `USER.md`, and `MEMORY.md`
-- curator staging pipeline with `Curator Inbox`, `Import to Knowledge`, and `Reject`
-- Piper-backed local voice output with `Read Aloud`
-- Whisper-backed local voice input into the composer
-- pause / resume voice playback controls
-- approved Piper voice presets and app-managed default voice paths
-- Windows-validated local app flow through Ollama
+## Current Brain Defaults
 
-## Current Model Strategy
+Current baseline shape:
+- baseline brain name: `Rosie`
+- baseline model lane: `gemma4:e4b`
+- baseline curated voice: `Amy (Female)`
 
-Supported lane right now:
-- floor model: `nchapman/dolphin3.0-qwen2.5:3b`
-- stronger fallback: `dolphin3:8b`
+Current validated second-brain example:
+- `Mia`
+- curated voice: `Joe (Male)`
 
-Additional validated experiment on the main machine:
-- `gemma4:e4b`
+## Voice Setup Reality
 
-Gemma 4 is available for experimentation, but it is not the recommended baseline model because it is much heavier than the floor setup.
+Voice works, but dependency delivery is still manual.
 
-## Verification Status
+Current working expectation on Windows:
+- shared Piper executable path at the machine level
+- shared Whisper executable path at the machine level
+- per-brain voice model selection layered on top of that shared install
 
-Verified recently:
+Current approved Piper voices in this repo:
+- `Amy (Female)`
+- `Joe (Male)`
+
+Required Piper files in the shared voices folder:
+- `en_US-amy-medium.onnx`
+- `en_US-amy-medium.onnx.json`
+- `en_US-joe-medium.onnx`
+- `en_US-joe-medium.onnx.json`
+
+Expected shared folder:
+- `%APPDATA%\LocalAI\tools\piper\voices`
+
+## Verification
+
+Recently verified in this repo:
 - `npm run build`
 - `cargo check`
-- live Brain workflow tests
-- guided Brain setup writing to the right files
-- curator inbox loading and staged package handling
-- local Piper voice output in settings and chat
-- local Whisper voice input into the composer
-- pause / resume playback behavior
-- Gemma 4 availability through Ollama
+- live multi-brain switching
+- conversation isolation
+- memory isolation
+- curator import isolation
+- brain-specific model persistence
+- brain-specific Piper voice selection with Rosie and Mia
 
 ## Repo Layout
 
 - `local-ai/`: app source
-- `NEXT_PROGRESS.md`: current progress tracker
-- `MVP_EXTENSION_PLAN.md`: original extension plan
-- `RUNBOOK.md`: bring-up and recovery steps
+- `MULTI_BRAIN_IMPLEMENTATION_PLAN.md`: roadmap for the experiment
+- `MULTI_BRAIN_STATUS.md`: current truth and checkpoint status
+- `MULTI_BRAIN_TEST_PLAN.md`: test coverage notes
 
-## Bring-Up
-
-See [RUNBOOK.md](./RUNBOOK.md).
-
-Short version:
+## Run
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai"
 npm run tauri:dev
 ```
 
 Ollama must be installed and running separately.
-
-## Notes
-
-Several deeper strategy and future-feature documents are intentionally kept private and ignored from git in this workspace.

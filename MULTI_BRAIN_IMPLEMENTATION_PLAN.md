@@ -25,7 +25,7 @@ That means:
 - team sharing
 - billing restrictions
 - shared memory pools
-- per-brain everything
+- per-brain everything except the specific model and voice settings we intentionally scoped
 
 ## Core Architecture Rule
 Do not treat this as persona switching.
@@ -42,6 +42,12 @@ Add an `agents` table with at least:
 - `updated_at`
 - `workspace_path`
 - `default_model`
+- `enable_voice_output`
+- `piper_voice_preset`
+- `piper_model_path`
+- `enable_voice_input`
+- `whisper_model_path`
+- `whisper_language`
 
 ### Conversations
 Add `agent_id` to `conversations`.
@@ -120,13 +126,15 @@ The safest first move is to register the current workspace as the initial defaul
 - curator flow becomes brain-scoped
 - daily logs become brain-scoped
 - knowledge import becomes brain-scoped
+- brain-specific voice preferences ride on top of one shared machine-level Piper and Whisper install
 
 ### Phase 5: Quality Of Life
 - conversation rename improvements for multi-brain management
-- brain rename
+- brain rename only if a real product need emerges later
 - archive brain
 - stronger empty-state guidance for new brains
 - clearer per-brain default-model behavior
+- polish around machine-level versus brain-level settings copy
 
 ## Hardest Technical Areas
 - workspace resolution
@@ -135,6 +143,7 @@ The safest first move is to register the current workspace as the initial defaul
 - Brain builder state isolation
 - keeping the user oriented in the UI
 - model ownership clarity between global settings and the active brain
+- shared machine install paths versus brain-specific voice preferences
 
 ## V1 Acceptance Criteria
 - default single-brain behavior still works
@@ -145,6 +154,8 @@ The safest first move is to register the current workspace as the initial defaul
 - Brain workflows remain isolated per brain
 - switching to an existing brain returns the user to a real conversation instead of an unnecessary blank chat
 - switching brains during a streamed response does not leak output into the wrong brain
+- brain-specific model choices persist correctly
+- brain-specific voice choices persist correctly while still using one shared Piper and Whisper install
 
 ## Build Discipline
 Do not widen scope until the previous phase feels solid.
@@ -159,4 +170,3 @@ The clean order is:
 - update `MULTI_BRAIN_STATUS.md` before or with each checkpoint commit
 - only change this plan when scope, sequencing, or priorities materially shift
 - keep the status doc as the day-to-day source of truth and keep this plan as the stable roadmap
-

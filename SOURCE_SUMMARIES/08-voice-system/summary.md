@@ -1,4 +1,4 @@
-﻿# Voice System Summary
+# Voice System Summary
 
 ## Purpose
 The voice system gives ModernClaw a local speech loop.
@@ -9,6 +9,7 @@ It currently supports:
 - in-chat transcription into the composer
 - read-aloud for assistant messages
 - playback pause/resume/stop behavior
+- brain-specific voice choice on top of one shared machine-level install
 
 ## Where To Find It In The App
 ### Chat
@@ -78,13 +79,18 @@ Voice setup lives in `Settings` under:
 - input language
 - input status check
 
+## Approved Voices
+- `Amy (Female)`
+- `Joe (Male)`
+
 ## User Instructions
 ### Enable voice output
 1. Open `Settings`.
 2. Turn on `Enable Voice Output`.
-3. Configure Piper path and voice model path if needed.
-4. Refresh output status.
-5. Test voice.
+3. Choose the approved voice for the active brain.
+4. Configure the shared Piper executable path if needed.
+5. Refresh output status.
+6. Test voice.
 
 ### Use read-aloud
 1. Open a chat with assistant messages.
@@ -109,3 +115,4 @@ Voice setup lives in `Settings` under:
 - Voice dependency delivery is still manual.
 - The app can auto-create folders and default paths, but it does not yet bundle/download Piper or Whisper automatically.
 - Voice works fully locally when dependencies are present.
+- Multiple brains can keep different voice choices while sharing one machine-level Piper and Whisper install.

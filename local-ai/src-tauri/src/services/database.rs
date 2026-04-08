@@ -55,6 +55,11 @@ impl Database {
                 .map_err(|error| format!("Migration 002 failed: {}", error))?;
         }
 
+        if current_version < 3 {
+            conn.execute_batch(include_str!("../migrations/003_agent_voice_settings.sql"))
+                .map_err(|error| format!("Migration 003 failed: {}", error))?;
+        }
+
         Ok(())
     }
 

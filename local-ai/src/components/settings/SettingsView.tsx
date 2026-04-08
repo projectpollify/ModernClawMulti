@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/Button';
 import { ModelCard } from '@/components/models/ModelCard';
 import { ModelDownloader } from '@/components/models/ModelDownloader';
 import { CURATED_PIPER_VOICES, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
+import { getEffectiveVoiceSettings } from '@/lib/voiceSettings';
 import { getDefaultVoicePaths } from '@/lib/voicePaths';
 import { cn } from '@/lib/utils';
+import { useAgentStore } from '@/stores/agentStore';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useModelStore } from '@/stores/modelStore';
@@ -12,7 +14,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useVoiceStore } from '@/stores/voiceStore';
 import { memoryApi } from '@/services/memory';
-import type { Theme } from '@/types';
+import type { AgentVoiceSettings, Theme } from '@/types';
 
 const CONTEXT_WINDOW_OPTIONS = [2048, 4096, 8192, 16384, 32768];
 const WHISPER_LANGUAGE_OPTIONS = [
@@ -27,6 +29,8 @@ const WHISPER_LANGUAGE_OPTIONS = [
 ];
 
 export function SettingsView() {
+  const activeAgent = useAgentStore((state) => state.activeAgent);
+  const updateActiveAgentVoiceSettings = useAgentStore((state) => state.updateActiveAgentVoiceSettings);
   const { settings, isLoading, error, updateSetting, resetSettings, clearError } = useSettingsStore();
   const currentTheme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
@@ -55,32 +59,45 @@ export function SettingsView() {
     }
   }, [ollamaStatus, refreshModels]);
 
+  const effectiveVoiceSettings = useMemo(
+    () => getEffectiveVoiceSettings(settings, activeAgent),
+    [settings, activeAgent]
+  );
+
+  const voiceDefaultsForActiveBrain = useMemo(
+    () => getDefaultVoicePaths(settings.memoryPath || '', effectiveVoiceSettings.piperVoicePreset),
+    [settings.memoryPath, effectiveVoiceSettings.piperVoicePreset]
+  );
+
   useEffect(() => {
-    if (settings.enableVoiceOutput || settings.piperExecutablePath || settings.piperModelPath) {
+    if (
+      effectiveVoiceSettings.enableVoiceOutput ||
+      effectiveVoiceSettings.piperExecutablePath ||
+      effectiveVoiceSettings.piperModelPath
+    ) {
       void checkOutputStatus();
     }
   }, [
-    settings.enableVoiceOutput,
-    settings.piperExecutablePath,
-    settings.piperModelPath,
+    effectiveVoiceSettings.enableVoiceOutput,
+    effectiveVoiceSettings.piperExecutablePath,
+    effectiveVoiceSettings.piperModelPath,
     checkOutputStatus,
   ]);
 
   useEffect(() => {
-    if (settings.enableVoiceInput || settings.whisperExecutablePath || settings.whisperModelPath) {
+    if (
+      effectiveVoiceSettings.enableVoiceInput ||
+      effectiveVoiceSettings.whisperExecutablePath ||
+      effectiveVoiceSettings.whisperModelPath
+    ) {
       void checkInputStatus();
     }
   }, [
-    settings.enableVoiceInput,
-    settings.whisperExecutablePath,
-    settings.whisperModelPath,
+    effectiveVoiceSettings.enableVoiceInput,
+    effectiveVoiceSettings.whisperExecutablePath,
+    effectiveVoiceSettings.whisperModelPath,
     checkInputStatus,
   ]);
-
-  const voiceDefaults = useMemo(
-    () => getDefaultVoicePaths(settings.memoryPath || '', settings.piperVoicePreset),
-    [settings.memoryPath, settings.piperVoicePreset]
-  );
 
   const modelOptions = useMemo(() => {
     const installedNames = new Set(models.map((model) => model.name));
@@ -103,6 +120,15 @@ export function SettingsView() {
       return true;
     });
   }, [models]);
+
+  const buildVoiceUpdate = (overrides: Partial<AgentVoiceSettings>): AgentVoiceSettings => ({
+    enableVoiceOutput: overrides.enableVoiceOutput ?? effectiveVoiceSettings.enableVoiceOutput,
+    piperVoicePreset: overrides.piperVoicePreset ?? effectiveVoiceSettings.piperVoicePreset,
+    piperModelPath: overrides.piperModelPath ?? effectiveVoiceSettings.piperModelPath,
+    enableVoiceInput: overrides.enableVoiceInput ?? effectiveVoiceSettings.enableVoiceInput,
+    whisperModelPath: overrides.whisperModelPath ?? effectiveVoiceSettings.whisperModelPath,
+    whisperLanguage: overrides.whisperLanguage ?? effectiveVoiceSettings.whisperLanguage,
+  });
 
   const handleThemeChange = async (nextTheme: Theme) => {
     const previousTheme = currentTheme;
@@ -141,13 +167,13 @@ export function SettingsView() {
   };
 
   const handlePiperVoicePresetChange = async (value: string) => {
-    const didPersistPreset = await updateSetting('piperVoicePreset', value);
-    if (!didPersistPreset) {
-      return;
-    }
-
     const nextDefaults = getDefaultVoicePaths(settings.memoryPath || '', value);
-    await updateSetting('piperModelPath', nextDefaults.piperModelPath);
+    await updateActiveAgentVoiceSettings(
+      buildVoiceUpdate({
+        piperVoicePreset: value,
+        piperModelPath: nextDefaults.piperModelPath,
+      })
+    );
   };
 
   const handleReset = async () => {
@@ -288,20 +314,20 @@ export function SettingsView() {
             <SettingsSection title="Voice Output">
               <SettingRow
                 label="Enable Voice Output"
-                description="Turn on local text-to-speech so assistant replies can be spoken through Piper."
+                description="Turn on local text-to-speech so assistant replies can be spoken through Piper for the active brain."
               >
                 <Toggle
-                  checked={settings.enableVoiceOutput}
-                  onChange={(value) => void updateSetting('enableVoiceOutput', value)}
+                  checked={effectiveVoiceSettings.enableVoiceOutput}
+                  onChange={(value) => void updateActiveAgentVoiceSettings(buildVoiceUpdate({ enableVoiceOutput: value }))}
                 />
               </SettingRow>
 
               <SettingRow
                 label="Approved Voice"
-                description="ModernClaw only supports a small approved Piper set by default. Choose one here and the app will point to the matching voice file automatically."
+                description="Choose a curated voice for the active brain. Rosie and Mia can use different voices while still sharing the same local Piper install."
               >
                 <select
-                  value={settings.piperVoicePreset}
+                  value={effectiveVoiceSettings.piperVoicePreset}
                   onChange={(event) => void handlePiperVoicePresetChange(event.target.value)}
                   className="max-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 >
@@ -315,35 +341,35 @@ export function SettingsView() {
 
               <SettingRow
                 label="Piper Executable"
-                description="ModernClaw looks here first for the local Piper binary. Leave it on the default path unless you need a manual override."
+                description="ModernClaw looks here first for the local Piper binary. This stays machine-level by default."
                 stackOnMobile
               >
                 <input
                   type="text"
                   value={settings.piperExecutablePath}
                   onChange={(event) => void updateSetting('piperExecutablePath', event.target.value)}
-                  placeholder={voiceDefaults.piperExecutablePath}
+                  placeholder={voiceDefaultsForActiveBrain.piperExecutablePath}
                   className="w-full min-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </SettingRow>
 
               <SettingRow
                 label="Piper Voice Model"
-                description="Selecting an approved voice above pre-fills this path. Change it only if you want to use a custom voice file."
+                description="This path belongs to the active brain. Choosing a curated voice above points this brain at the matching model file automatically."
                 stackOnMobile
               >
                 <input
                   type="text"
-                  value={settings.piperModelPath}
-                  onChange={(event) => void updateSetting('piperModelPath', event.target.value)}
-                  placeholder={voiceDefaults.piperModelPath}
+                  value={effectiveVoiceSettings.piperModelPath}
+                  onChange={(event) => void updateActiveAgentVoiceSettings(buildVoiceUpdate({ piperModelPath: event.target.value }))}
+                  placeholder={voiceDefaultsForActiveBrain.piperModelPath}
                   className="w-full min-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </SettingRow>
 
               <SettingRow
                 label="Voice Output Status"
-                description="Check whether Piper and the selected voice model are available on this machine."
+                description="Check whether Piper and the selected voice model are available for the active brain on this machine."
                 stackOnMobile
               >
                 <div className="flex flex-wrap items-center justify-end gap-2">
@@ -354,7 +380,7 @@ export function SettingsView() {
                     variant="outline"
                     size="sm"
                     onClick={() => void speakMessage('voice-test', 'ModernClaw voice output is configured and ready to test.')}
-                    disabled={!settings.enableVoiceOutput || isSpeakingVoice}
+                    disabled={!effectiveVoiceSettings.enableVoiceOutput || isSpeakingVoice}
                   >
                     {isSpeakingVoice ? 'Speaking...' : 'Test Voice'}
                   </Button>
@@ -378,49 +404,49 @@ export function SettingsView() {
             <SettingsSection title="Voice Input">
               <SettingRow
                 label="Enable Voice Input"
-                description="Turn on local speech-to-text so the microphone can transcribe into the composer through Whisper."
+                description="Turn on local speech-to-text for the active brain so the microphone can transcribe into the composer through Whisper."
               >
                 <Toggle
-                  checked={settings.enableVoiceInput}
-                  onChange={(value) => void updateSetting('enableVoiceInput', value)}
+                  checked={effectiveVoiceSettings.enableVoiceInput}
+                  onChange={(value) => void updateActiveAgentVoiceSettings(buildVoiceUpdate({ enableVoiceInput: value }))}
                 />
               </SettingRow>
 
               <SettingRow
                 label="Whisper Executable"
-                description="ModernClaw looks here first for whisper-cli.exe. Leave it on the default path unless you need a manual override."
+                description="ModernClaw looks here first for whisper-cli.exe. This stays machine-level by default."
                 stackOnMobile
               >
                 <input
                   type="text"
                   value={settings.whisperExecutablePath}
                   onChange={(event) => void updateSetting('whisperExecutablePath', event.target.value)}
-                  placeholder={voiceDefaults.whisperExecutablePath}
+                  placeholder={voiceDefaultsForActiveBrain.whisperExecutablePath}
                   className="w-full min-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </SettingRow>
 
               <SettingRow
                 label="Whisper Model"
-                description="ModernClaw is currently tuned around one approved Whisper floor model for fast local transcription."
+                description="This path belongs to the active brain. Override it only if this brain needs a different transcription model than the machine default."
                 stackOnMobile
               >
                 <input
                   type="text"
-                  value={settings.whisperModelPath}
-                  onChange={(event) => void updateSetting('whisperModelPath', event.target.value)}
-                  placeholder={voiceDefaults.whisperModelPath}
+                  value={effectiveVoiceSettings.whisperModelPath}
+                  onChange={(event) => void updateActiveAgentVoiceSettings(buildVoiceUpdate({ whisperModelPath: event.target.value }))}
+                  placeholder={voiceDefaultsForActiveBrain.whisperModelPath}
                   className="w-full min-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </SettingRow>
 
               <SettingRow
                 label="Voice Input Language"
-                description="Use auto-detect or lock Whisper to a language for faster, cleaner transcription."
+                description="Use auto-detect or lock Whisper to a language for faster, cleaner transcription in the active brain."
               >
                 <select
-                  value={settings.whisperLanguage}
-                  onChange={(event) => void updateSetting('whisperLanguage', event.target.value)}
+                  value={effectiveVoiceSettings.whisperLanguage}
+                  onChange={(event) => void updateActiveAgentVoiceSettings(buildVoiceUpdate({ whisperLanguage: event.target.value }))}
                   className="rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 >
                   {WHISPER_LANGUAGE_OPTIONS.map((option) => (
@@ -433,7 +459,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Voice Input Status"
-                description="Check whether Whisper and the selected transcription model are available on this machine."
+                description="Check whether Whisper and the selected transcription model are available for the active brain on this machine."
                 stackOnMobile
               >
                 <div className="flex flex-wrap items-center justify-end gap-2">
@@ -651,6 +677,3 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boo
     </button>
   );
 }
-
-
-

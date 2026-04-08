@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use commands::agents::{
     agent_create, agent_delete, agent_get_active, agent_list, agent_set_active,
-    agent_update_default_model,
+    agent_update_default_model, agent_update_voice_settings,
 };
 use commands::chat::{
     build_context, chat_send, check_ollama_status, delete_model, list_models, pull_model, AppState,
@@ -113,6 +113,7 @@ pub fn run() {
             agent_set_active,
             agent_create,
             agent_update_default_model,
+            agent_update_voice_settings,
             agent_delete,
             conversation_create,
             conversation_list,

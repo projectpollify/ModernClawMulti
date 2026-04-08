@@ -1,5 +1,7 @@
+import { getEffectiveVoiceSettings } from '@/lib/voiceSettings';
 import { create } from 'zustand';
 import { voiceApi } from '@/services/voice';
+import { useAgentStore } from '@/stores/agentStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { VoiceInputStatus, VoiceOutputStatus } from '@/types/voice';
 
@@ -56,13 +58,15 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
 
   checkOutputStatus: async () => {
     const settings = useSettingsStore.getState().settings;
+    const activeAgent = useAgentStore.getState().activeAgent;
+    const effectiveVoiceSettings = getEffectiveVoiceSettings(settings, activeAgent);
 
     set({ isCheckingOutput: true, error: null });
 
     try {
       const outputStatus = await voiceApi.checkOutputStatus({
-        piperExecutablePath: settings.piperExecutablePath,
-        piperModelPath: settings.piperModelPath,
+        piperExecutablePath: effectiveVoiceSettings.piperExecutablePath,
+        piperModelPath: effectiveVoiceSettings.piperModelPath,
       });
 
       set({ outputStatus, isCheckingOutput: false });
@@ -77,13 +81,15 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
 
   checkInputStatus: async () => {
     const settings = useSettingsStore.getState().settings;
+    const activeAgent = useAgentStore.getState().activeAgent;
+    const effectiveVoiceSettings = getEffectiveVoiceSettings(settings, activeAgent);
 
     set({ isCheckingInput: true, error: null });
 
     try {
       const inputStatus = await voiceApi.checkInputStatus({
-        whisperExecutablePath: settings.whisperExecutablePath,
-        whisperModelPath: settings.whisperModelPath,
+        whisperExecutablePath: effectiveVoiceSettings.whisperExecutablePath,
+        whisperModelPath: effectiveVoiceSettings.whisperModelPath,
       });
 
       set({ inputStatus, isCheckingInput: false });
@@ -99,6 +105,8 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
   speakMessage: async (messageId, text) => {
     const state = get();
     const settings = useSettingsStore.getState().settings;
+    const activeAgent = useAgentStore.getState().activeAgent;
+    const effectiveVoiceSettings = getEffectiveVoiceSettings(settings, activeAgent);
 
     if (state.speakingMessageId === messageId) {
       if (state.isSpeaking && !state.isPaused) {
@@ -112,7 +120,7 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
       }
     }
 
-    if (!settings.enableVoiceOutput) {
+    if (!effectiveVoiceSettings.enableVoiceOutput) {
       set({ error: 'Voice output is disabled in Settings.' });
       return;
     }
@@ -130,8 +138,8 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
 
     try {
       const audioBytes = await voiceApi.speak(text, {
-        piperExecutablePath: settings.piperExecutablePath,
-        piperModelPath: settings.piperModelPath,
+        piperExecutablePath: effectiveVoiceSettings.piperExecutablePath,
+        piperModelPath: effectiveVoiceSettings.piperModelPath,
       });
 
       if (currentToken !== playbackToken) {
@@ -226,8 +234,10 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
 
   transcribeAudio: async (audioData) => {
     const settings = useSettingsStore.getState().settings;
+    const activeAgent = useAgentStore.getState().activeAgent;
+    const effectiveVoiceSettings = getEffectiveVoiceSettings(settings, activeAgent);
 
-    if (!settings.enableVoiceInput) {
+    if (!effectiveVoiceSettings.enableVoiceInput) {
       set({ error: 'Voice input is disabled in Settings.' });
       return null;
     }
@@ -239,9 +249,9 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
 
     try {
       const transcript = await voiceApi.transcribe(audioData, {
-        whisperExecutablePath: settings.whisperExecutablePath,
-        whisperModelPath: settings.whisperModelPath,
-        whisperLanguage: settings.whisperLanguage,
+        whisperExecutablePath: effectiveVoiceSettings.whisperExecutablePath,
+        whisperModelPath: effectiveVoiceSettings.whisperModelPath,
+        whisperLanguage: effectiveVoiceSettings.whisperLanguage,
       });
 
       set({ isTranscribing: false });

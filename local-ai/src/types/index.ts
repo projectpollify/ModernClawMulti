@@ -8,8 +8,23 @@ export interface Agent {
   status?: string;
   workspacePath?: string;
   defaultModel?: string;
+  enableVoiceOutput?: boolean;
+  piperVoicePreset?: string;
+  piperModelPath?: string;
+  enableVoiceInput?: boolean;
+  whisperModelPath?: string;
+  whisperLanguage?: string;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface AgentVoiceSettings {
+  enableVoiceOutput?: boolean;
+  piperVoicePreset?: string;
+  piperModelPath?: string;
+  enableVoiceInput?: boolean;
+  whisperModelPath?: string;
+  whisperLanguage?: string;
 }
 
 export interface Message {

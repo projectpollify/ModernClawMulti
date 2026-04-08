@@ -3,10 +3,10 @@
 ## Project State
 Status: Phase 4 underway
 
-ModernClawMulti now has a real working multi-brain loop with stable create, switch, delete, conversation restore, stream isolation, brain-level model persistence, and clearer brain-scoped UI surfaces.
+ModernClawMulti now has a real working multi-brain loop with stable create, switch, delete, conversation restore, stream isolation, brain-level model persistence, and increasingly mature brain-scoped workspace behavior.
 
 ## Current Objective
-Continue Phase 4 by validating and hardening the remaining brain-scoped workspace flows while preserving the calm, predictable behavior already achieved in Chat, Memory, Brain, and model switching.
+Continue Phase 4 by validating and hardening the remaining brain-scoped workspace flows while preserving the calm, predictable behavior already achieved in Chat, Memory, Brain, Settings, Curator, and model switching.
 
 ## Current Phase
 Phase 4: Full Workspace Integration
@@ -71,6 +71,12 @@ Phase 4: Full Workspace Integration
 - Settings now reload with the active brain so workspace path information updates correctly on switch
 - curator import and reject actions were fixed after a Tauri payload mismatch blocked the buttons
 - curator import was re-validated end to end and imported knowledge stays isolated to the correct brain
+- brain-level voice settings added for output/input preferences and model paths
+- shared machine-level Piper and Whisper defaults now resolve correctly even when the active brain lives under `agents/<brain>`
+- old brain-local tool paths now fall back safely to the shared machine install instead of staying pinned to empty per-brain `tools/` folders
+- approved Piper voice list simplified to `Amy (Female)` and `Joe (Male)`
+- Rosie voice output validated with `Amy (Female)`
+- Mia voice output validated with `Joe (Male)`
 
 ## What The App Can Do Now
 - seed and resolve the baseline Rosie brain
@@ -84,17 +90,18 @@ Phase 4: Full Workspace Integration
 - restore the latest conversation for the newly selected brain when one exists
 - keep streamed responses attached to the conversation and brain that started them
 - persist a preferred model to the active brain and restore it on switch
+- persist brain-specific Piper and Whisper preferences on top of a shared machine-level install
 - rename conversations inline from the sidebar
 - show clearer brain-aware empty guidance in chat and sidebar surfaces
 - show the active brain more clearly in Memory, Brain, Curator, Daily Logs, Knowledge Files, and sidebar surfaces
 - keep Brain and daily-log draft surfaces from carrying stale state across brain switches
 - keep Settings workspace information aligned with the currently active brain
 - import staged curator knowledge into the correct brain workspace without cross-brain bleed
+- give Rosie and Mia different validated Piper voices without requiring separate Piper installs
 
 ## What Is Still Missing
 - broader Phase 4 stress-testing of all remaining brain-scoped workflows under real use
 - final review of whether any hidden single-brain assumptions remain in less frequently used surfaces
-- future product decision on whether voice/tool paths should remain global or become brain-specific
 - optional archive-brain support if later needed
 - eventual decision on when the project is stable enough to begin the wizard and support-brain layers
 
@@ -103,7 +110,7 @@ The structural multi-brain system is working. The remaining work is no longer ab
 
 ## Next
 - continue targeted Phase 4 validation under real use
-- keep watching for stale state in less frequently used workspace surfaces after this latest draft-reset pass
+- keep watching for stale state in less frequently used workspace surfaces after this latest voice/settings pass
 - avoid adding wizard/support features until the remaining workspace truths feel stable
 - checkpoint stability improvements as they are proven
 
@@ -124,6 +131,3 @@ Phase 4 will feel healthy when:
 - every major workspace surface behaves as obviously brain-scoped
 - remaining hidden bleed risks are squeezed out through real use
 - new feature work can rely on stable multi-brain truths instead of assumptions
-
-
-

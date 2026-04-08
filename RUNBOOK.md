@@ -2,12 +2,12 @@
 
 ## Purpose
 
-This runbook records the bring-up, recovery, and basic verification steps for the ModernClaw workspace.
+This runbook records the bring-up, recovery, and basic verification steps for the ModernClawMulti workspace.
 
 ## Current Workspace
 
-- Repo root: `C:\Users\pento\Desktop\LocalAI-Next`
-- App source: `C:\Users\pento\Desktop\LocalAI-Next\local-ai`
+- Repo root: `C:\Users\pento\Desktop\ModernClawMulti`
+- App source: `C:\Users\pento\Desktop\ModernClawMulti\local-ai`
 
 ## Daily Bring-Up
 
@@ -18,7 +18,7 @@ This runbook records the bring-up, recovery, and basic verification steps for th
 ### Commands
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai"
 npm run tauri:dev
 ```
 
@@ -35,21 +35,21 @@ If Ollama says the port is already in use, it is usually already running.
 ### Frontend + TypeScript
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai"
 npm run build
 ```
 
 ### Rust / Tauri Backend
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai\src-tauri"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai\src-tauri"
 cargo check
 ```
 
 ## Packaged Build
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai"
 npm run tauri:build
 ```
 
@@ -65,17 +65,15 @@ Symptoms may include:
 Fix:
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai\src-tauri"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai\src-tauri"
 cargo clean
-cd "C:\Users\pento\Desktop\LocalAI-Next\local-ai"
+cd "C:\Users\pento\Desktop\ModernClawMulti\local-ai"
 npm run tauri:dev
 ```
 
 ### Sidebar appears lost
 
-Current behavior should be safer now because the hidden sidebar state is no longer persisted between launches.
-
-If the app still gets into a strange UI state, restart dev mode.
+If the app gets into a strange UI state, restart dev mode.
 
 ## Voice Setup Notes
 
@@ -85,42 +83,52 @@ Working now:
 - local voice output through Piper
 - local voice input through Whisper
 - pause / resume / stop playback controls
+- brain-specific Piper voice choice layered on top of a shared machine-level install
 
 ### Current Default Voice Tool Layout
 
-The app provisions default folders under the runtime memory base path:
-- `...\tools\piper\`
-- `...\tools\piper\voices\`
-- `...\tools\whisper\`
-- `...\tools\whisper\models\`
+The app provisions shared folders under the LocalAI app-data root:
+- `%APPDATA%\LocalAI\tools\piper\`
+- `%APPDATA%\LocalAI\tools\piper\voices\`
+- `%APPDATA%\LocalAI\tools\whisper\`
+- `%APPDATA%\LocalAI\tools\whisper\models\`
 
 Important current limitation:
 - the folders are auto-created
 - Piper / Whisper executables and model files are **not** auto-downloaded yet
 - clean-machine setup still requires manual dependency placement or installation
 
-### Main-Machine Working Paths
+### Current Validated Piper Setup
 
-Current working local voice setup on the main machine:
+Current validated Piper files on this machine:
 - Piper executable: `C:\Tools\piper\piper.exe`
-- Piper voice model: `C:\Tools\piper\voices\en_US-lessac-medium.onnx`
-- Whisper executable: `C:\Tools\whisper\release\whisper-cli.exe`
-- Whisper model: `C:\Tools\whisper\models\ggml-base.en.bin`
+- Amy model: `%APPDATA%\LocalAI\tools\piper\voices\en_US-amy-medium.onnx`
+- Amy metadata: `%APPDATA%\LocalAI\tools\piper\voices\en_US-amy-medium.onnx.json`
+- Joe model: `%APPDATA%\LocalAI\tools\piper\voices\en_US-joe-medium.onnx`
+- Joe metadata: `%APPDATA%\LocalAI\tools\piper\voices\en_US-joe-medium.onnx.json`
 
-Important note:
-- the matching `en_US-lessac-medium.onnx.json` file must sit beside the `.onnx` model file
+Current validated Whisper setup:
+- Whisper executable: `C:\Tools\whisper\release\whisper-cli.exe`
+- Whisper model: `%APPDATA%\LocalAI\tools\whisper\models\ggml-base.en.bin`
 
 ### Approved Voice Presets
 
 Current approved Piper voice presets in the app:
-- `Lessac`
-- `Amy`
-- `Joe`
+- `Amy (Female)`
+- `Joe (Male)`
+
+### Brain Voice Validation
+
+Validated live:
+- Rosie uses `Amy (Female)`
+- Mia uses `Joe (Male)`
+- both brains share the same machine-level Piper install
+- model and voice selection persist when switching brains
 
 ## Brain / Curator Notes
 
-- Brain data loads from the local memory workspace managed by the app.
-- Curator staged packages are read from the local `curator/staged/` area under the app data folder.
+- Brain data loads from the active local brain workspace managed by the app.
+- Curator staged packages are read from the active brain's `curator/staged/` area.
 - Packages added outside the app appear in the Curator Inbox after refresh.
 
 ## Local Data Location
@@ -133,26 +141,21 @@ The app still uses the older `LocalAI` app-data root for runtime memory and know
 - `knowledge/`
 - `curator/`
 - `tools/`
+- `agents/`
 
 ## Current Model Stack
 
-Current tested model stack on the main machine:
-- floor model: `nchapman/dolphin3.0-qwen2.5:3b`
-- stronger fallback: `dolphin3:8b`
-- heavy experimental lane: `gemma4:e4b`
-
-Use the 3B model as the practical baseline.
-Use 8B Dolphin as the stronger default fallback.
-Treat Gemma 4 as an experimental heavy option, not the floor lane.
+Current tested baseline on this machine:
+- baseline model: `gemma4:e4b`
 
 ## Quick Audit Commands
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next"
+cd "C:\Users\pento\Desktop\ModernClawMulti"
 git status --short
 ```
 
 ```powershell
-cd "C:\Users\pento\Desktop\LocalAI-Next"
+cd "C:\Users\pento\Desktop\ModernClawMulti"
 git log --oneline -10
 ```

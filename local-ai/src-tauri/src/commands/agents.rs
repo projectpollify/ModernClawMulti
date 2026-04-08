@@ -24,6 +24,18 @@ pub struct AgentDto {
     #[serde(default)]
     pub default_model: Option<String>,
     #[serde(default)]
+    pub enable_voice_output: Option<bool>,
+    #[serde(default)]
+    pub piper_voice_preset: Option<String>,
+    #[serde(default)]
+    pub piper_model_path: Option<String>,
+    #[serde(default)]
+    pub enable_voice_input: Option<bool>,
+    #[serde(default)]
+    pub whisper_model_path: Option<String>,
+    #[serde(default)]
+    pub whisper_language: Option<String>,
+    #[serde(default)]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub updated_at: Option<DateTime<Utc>>,
@@ -38,10 +50,33 @@ impl From<Agent> for AgentDto {
             status: Some(value.status),
             workspace_path: Some(value.workspace_path),
             default_model: value.default_model,
+            enable_voice_output: value.enable_voice_output,
+            piper_voice_preset: value.piper_voice_preset,
+            piper_model_path: value.piper_model_path,
+            enable_voice_input: value.enable_voice_input,
+            whisper_model_path: value.whisper_model_path,
+            whisper_language: value.whisper_language,
             created_at: Some(value.created_at),
             updated_at: Some(value.updated_at),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentVoiceSettingsDto {
+    #[serde(default)]
+    pub enable_voice_output: Option<bool>,
+    #[serde(default)]
+    pub piper_voice_preset: Option<String>,
+    #[serde(default)]
+    pub piper_model_path: Option<String>,
+    #[serde(default)]
+    pub enable_voice_input: Option<bool>,
+    #[serde(default)]
+    pub whisper_model_path: Option<String>,
+    #[serde(default)]
+    pub whisper_language: Option<String>,
 }
 
 #[tauri::command]
@@ -91,6 +126,12 @@ pub async fn agent_create(
         status: agent.status.unwrap_or_else(|| "active".to_string()),
         workspace_path: workspace_path.clone(),
         default_model: agent.default_model,
+        enable_voice_output: agent.enable_voice_output,
+        piper_voice_preset: agent.piper_voice_preset,
+        piper_model_path: agent.piper_model_path,
+        enable_voice_input: agent.enable_voice_input,
+        whisper_model_path: agent.whisper_model_path,
+        whisper_language: agent.whisper_language,
         created_at: agent.created_at.unwrap_or(now),
         updated_at: agent.updated_at.unwrap_or(now),
     };
@@ -113,6 +154,26 @@ pub async fn agent_update_default_model(
     let repo = AgentRepository::new(&db_state.db);
     repo.ensure_default_agent(&memory_state.root_path)?;
     repo.update_default_model(&agent_id, default_model.as_deref())
+}
+
+#[tauri::command]
+pub async fn agent_update_voice_settings(
+    db_state: State<'_, DatabaseState>,
+    memory_state: State<'_, MemoryState>,
+    agent_id: String,
+    voice_settings: AgentVoiceSettingsDto,
+) -> Result<(), String> {
+    let repo = AgentRepository::new(&db_state.db);
+    repo.ensure_default_agent(&memory_state.root_path)?;
+    repo.update_voice_settings(
+        &agent_id,
+        voice_settings.enable_voice_output,
+        voice_settings.piper_voice_preset.as_deref(),
+        voice_settings.piper_model_path.as_deref(),
+        voice_settings.enable_voice_input,
+        voice_settings.whisper_model_path.as_deref(),
+        voice_settings.whisper_language.as_deref(),
+    )
 }
 
 #[tauri::command]

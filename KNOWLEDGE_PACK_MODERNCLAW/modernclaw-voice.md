@@ -39,7 +39,11 @@ Voice settings include:
 - Whisper model path
 - transcription language
 
-ModernClaw also provisions default tool folders under the memory base path.
+ModernClawMulti now uses one shared machine-level Piper and Whisper install while allowing each brain to keep its own voice selection.
+
+Current approved Piper voices:
+- `Amy (Female)`
+- `Joe (Male)`
 
 ## Important Current Limitation
 ModernClaw currently prepares the folders and expected paths, but dependency delivery is still manual. Piper, Whisper, and their models still need to be installed or placed into those folders.

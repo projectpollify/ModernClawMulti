@@ -75,6 +75,12 @@ pub struct Agent {
     pub status: String,
     pub workspace_path: String,
     pub default_model: Option<String>,
+    pub enable_voice_output: Option<bool>,
+    pub piper_voice_preset: Option<String>,
+    pub piper_model_path: Option<String>,
+    pub enable_voice_input: Option<bool>,
+    pub whisper_model_path: Option<String>,
+    pub whisper_language: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

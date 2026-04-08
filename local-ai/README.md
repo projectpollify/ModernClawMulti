@@ -1,8 +1,8 @@
-# ModernClaw App
+# ModernClawMulti App
 
-This app is the current ModernClaw application surface built on the original local-first desktop foundation.
+This app is the current ModernClawMulti application surface built on the original local-first desktop foundation.
 
-It is a private, local-first brain creator for local AI agents, not just a desktop chat shell.
+It keeps the core ModernClaw brain-building model, but extends it into a working multi-brain workspace experiment.
 
 ## What The App Does
 
@@ -23,9 +23,10 @@ It is a private, local-first brain creator for local AI agents, not just a deskt
 - local voice input through Whisper into the composer
 - pause / resume / stop playback controls
 - approved Piper voice presets
-- app-managed default voice tool paths under the memory workspace
+- shared machine-level voice tool paths with brain-specific voice choice layered on top
 - onboarding flow for first launch
 - settings for theme, default model, privacy, prompt budget, and voice
+- multi-brain create, switch, delete, and restore flows
 
 ## What Is Verified
 
@@ -47,6 +48,10 @@ This project has been manually verified on Windows for:
 - local Piper voice output from settings and assistant replies
 - local Whisper voice input into the composer
 - pause / resume playback behavior
+- multi-brain create/switch/delete flows
+- conversation isolation across Rosie and Mia
+- knowledge and curator isolation across Rosie and Mia
+- brain-specific Piper voice selection with Rosie on `Amy (Female)` and Mia on `Joe (Male)`
 - Windows production packaging with `npm run tauri:build`
 
 ## Windows-First Status
@@ -59,7 +64,7 @@ This app is currently Windows-first.
 
 ## Ollama Requirement
 
-ModernClaw requires Ollama to be installed separately.
+ModernClawMulti requires Ollama to be installed separately.
 
 Current expectation:
 
@@ -67,27 +72,26 @@ Current expectation:
 2. pull at least one model
 3. make sure Ollama is running before using chat
 
-Current supported lane:
-
-- floor model: `nchapman/dolphin3.0-qwen2.5:3b`
-- optional stronger fallback: `dolphin3:8b`
-
-Current additional experiment:
+Current baseline lane:
 - `gemma4:e4b`
-
-Gemma 4 works through Ollama, but it is significantly heavier and should be treated as an experimental high-weight option, not the baseline.
 
 ## Voice Setup Reality
 
 Current behavior:
-- the app creates the default voice-tool folders under the runtime memory path
+- the app creates the shared voice-tool folders under `%APPDATA%\LocalAI\tools`
 - Piper and Whisper files are not auto-downloaded yet
 - clean-machine voice setup still requires manual dependency placement or installation
+- brains can keep different voice choices while sharing one machine-level Piper and Whisper install
 
 Current approved Piper voice presets:
-- `Lessac`
-- `Amy`
-- `Joe`
+- `Amy (Female)`
+- `Joe (Male)`
+
+Required Piper files for the current validated setup:
+- `en_US-amy-medium.onnx`
+- `en_US-amy-medium.onnx.json`
+- `en_US-joe-medium.onnx`
+- `en_US-joe-medium.onnx.json`
 
 ## Development
 
@@ -126,7 +130,8 @@ The app stores local Markdown context files under the LocalAI app-data memory fo
 - daily logs in `memory/YYYY-MM-DD.md`
 - knowledge references in `knowledge/*.md`
 - curator staging folders in `curator/`
-- voice tool folders in `tools/`
+- shared voice tool folders in `tools/`
+- per-brain workspaces under `agents/<brain>/`
 
 ## Known Limitations
 
@@ -145,6 +150,6 @@ The app stores local Markdown context files under the LocalAI app-data memory fo
 
 1. Start Ollama on your machine.
 2. Open the app.
-3. Complete onboarding.
-4. Confirm a model is installed.
-5. Start building your brain.
+3. Confirm a model is installed.
+4. Confirm Piper and Whisper paths if you want voice.
+5. Start building and switching brains.
