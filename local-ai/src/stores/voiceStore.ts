@@ -1,4 +1,5 @@
 import { getEffectiveVoiceSettings } from '@/lib/voiceSettings';
+import { prepareTextForSpeech } from '@/lib/speechText';
 import { create } from 'zustand';
 import { voiceApi } from '@/services/voice';
 import { useAgentStore } from '@/stores/agentStore';
@@ -125,6 +126,8 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
       return;
     }
 
+    const normalizedText = prepareTextForSpeech(text);
+
     playbackToken += 1;
     const currentToken = playbackToken;
     releaseAudio();
@@ -137,7 +140,7 @@ export const useVoiceStore = create<VoiceState>()((set, get) => ({
     });
 
     try {
-      const audioBytes = await voiceApi.speak(text, {
+      const audioBytes = await voiceApi.speak(normalizedText, {
         piperExecutablePath: effectiveVoiceSettings.piperExecutablePath,
         piperModelPath: effectiveVoiceSettings.piperModelPath,
       });
