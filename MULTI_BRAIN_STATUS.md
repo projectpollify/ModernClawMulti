@@ -1,4 +1,4 @@
-# Multi-Brain Status
+﻿# Multi-Brain Status
 
 ## Project State
 Status: Phase 4 underway
@@ -76,7 +76,11 @@ Phase 4: Full Workspace Integration
 - old brain-local tool paths now fall back safely to the shared machine install instead of staying pinned to empty per-brain `tools/` folders
 - approved Piper voice list simplified to `Amy (Female)` and `Joe (Male)`
 - Rosie voice output validated with `Amy (Female)`
-- Mia voice output validated with `Joe (Male)`
+- speech normalization added before Piper playback so markdown and formatting artifacts are not spoken literally
+- Joe support brain created as a live dedicated tech support and customer service brain
+- Joe workspace seeded with support-specific `SOUL.md`, `USER.md`, `MEMORY.md`, a support playbook, and the refreshed ModernClaw knowledge pack
+- Joe voice output validated with `Joe (Male)`
+- Rosie and Joe now have distinct validated female/male voice identities in the live app
 
 ## What The App Can Do Now
 - seed and resolve the baseline Rosie brain
@@ -97,27 +101,32 @@ Phase 4: Full Workspace Integration
 - keep Brain and daily-log draft surfaces from carrying stale state across brain switches
 - keep Settings workspace information aligned with the currently active brain
 - import staged curator knowledge into the correct brain workspace without cross-brain bleed
-- give Rosie and Mia different validated Piper voices without requiring separate Piper installs
+- give Rosie and Joe different validated Piper voices without requiring separate Piper installs
+- run Joe as a live support and customer service brain with his own workspace, support files, and ModernClaw knowledge pack
 
 ## What Is Still Missing
 - broader Phase 4 stress-testing of all remaining brain-scoped workflows under real use
 - final review of whether any hidden single-brain assumptions remain in less frequently used surfaces
 - optional archive-brain support if later needed
-- eventual decision on when the project is stable enough to begin the wizard and support-brain layers
+- formal product entry points for the support brain
+- the full wizard system for guided brain creation and refinement
 
 ## Current Limits
 The structural multi-brain system is working. The remaining work is no longer about proving the architecture. It is about continuing to validate, harden, and polish the full workspace experience so new feature layers are built on stable truths.
 
+Joe already exists as a live runtime brain, but the support layer is not yet fully productized as a built-in help surface with dedicated entry points and guided flows.
+
 ## Next
 - continue targeted Phase 4 validation under real use
 - keep watching for stale state in less frequently used workspace surfaces after this latest voice/settings pass
-- avoid adding wizard/support features until the remaining workspace truths feel stable
+- avoid adding the full wizard system until the remaining workspace truths feel stable
+- keep the support-brain concept documented and grounded in current product truth while the broader feature layer matures
 - checkpoint stability improvements as they are proven
 
 ## Immediate Risks
 - stale frontend state in deeper workspace surfaces that have not yet been stressed as hard as chat, memory, and brain switching
 - future features accidentally reintroducing single-brain assumptions
-- moving into wizard/support work before the remaining workspace truths are stable enough
+- moving into wizard/support product layers before the remaining workspace truths are stable enough
 
 ## Guardrails
 - keep v1 narrow
