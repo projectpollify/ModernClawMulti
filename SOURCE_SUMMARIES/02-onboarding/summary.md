@@ -1,11 +1,11 @@
-﻿# Onboarding Summary
+# Onboarding Summary
 
 ## Purpose
-Onboarding prepares a first-time user to run ModernClaw successfully.
+Onboarding prepares a first-time user to run ModernClawMulti successfully.
 
 It is meant to confirm:
 - Ollama is available
-- at least one supported model is installed
+- at least one usable local model is installed
 - the local memory workspace exists
 - the user understands the basic local-first setup
 
@@ -33,25 +33,22 @@ It includes five steps:
 ### Store
 - `src/stores/onboardingStore.ts`
 
-The app decides whether to show onboarding based on whether onboarding has been completed.
-
 ## What Each Step Does
 ### Welcome
 Explains the product at a high level:
 - private by default
-- works offline
-- custom memory
-- model control
+- local-first
+- brain files and model control
+- multi-brain system comes after onboarding, not before it
 
 ### Ollama Check
 Checks whether Ollama is reachable on localhost.
-If not, it instructs the user to install/start Ollama.
+If not, it instructs the user to install or start Ollama.
 
 ### Model Step
-Guides the user toward the supported floor model first.
-Current curated path:
-- floor model: `nchapman/dolphin3.0-qwen2.5:3b`
-- optional fallback: `dolphin3:8b`
+Guides the user toward the current baseline lane for this repo and product track.
+Current practical guidance:
+- baseline lane: `gemma4:e4b`
 
 ### Memory Step
 Initializes the local brain files and shows the storage path.
@@ -61,17 +58,9 @@ It verifies the presence of:
 - `MEMORY.md`
 
 ### Complete Step
-Marks onboarding as finished and hands the user into the full app.
-
-## User Instructions
-### Complete first-time setup
-1. Click `Get Started`.
-2. Let ModernClaw verify Ollama.
-3. Download the recommended model if needed.
-4. Confirm the memory files are initialized.
-5. Finish onboarding.
+Marks onboarding as finished and hands the user into the full multi-brain app shell.
 
 ## Important Notes
-- Onboarding is opinionated toward the floor model strategy.
-- It is not meant to expose every possible configuration option.
-- Users can restart onboarding later from Settings.
+- onboarding still bootstraps the baseline workspace first
+- multi-brain flows begin after onboarding is complete
+- users can restart onboarding later from Settings

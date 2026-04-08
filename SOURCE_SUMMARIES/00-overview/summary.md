@@ -1,58 +1,52 @@
-﻿# ModernClaw Source Summaries Overview
+# ModernClaw Source Summaries Overview
 
 ## Purpose
-This folder is a source-knowledge pack for ModernClaw itself.
+This folder is the human-maintained source knowledge pack for the current `ModernClawMulti` app.
 
-It exists so a future fetcher, compiler, or domain-expert brain like Rosie can understand the app from the inside out without re-reading the full codebase every time.
-
-These summaries are based on the actual current implementation in the `local-ai` Tauri/React application.
+It exists so a future fetcher, compiler, support brain, or expert brain can understand the real product shape without rereading the full codebase every time.
 
 ## What This Doc Set Covers
-- the app shell and navigation
+- app shell and navigation
 - onboarding
 - model management
-- chat and conversation persistence
+- chat and conversation behavior
 - memory workspace
 - brain builder workflows
-- curator staging/import
+- curator staging and import
 - voice input and output
 - settings
-- context building and persistence architecture
+- context and persistence architecture
 
-## How to Use This Folder
-Use the numbered feature folders in order.
-
-Recommended reading order:
-1. app shell and navigation
-2. onboarding
-3. model management
-4. chat and conversations
-5. memory workspace
-6. brain builder
-7. curator inbox
-8. voice system
-9. settings
-10. context and persistence
-
-## Current App Shape
-ModernClaw currently has four main app views:
+## Current Product Shape
+ModernClawMulti is no longer just a single-brain local AI workspace.
+It is now a real multi-brain desktop app with:
 - Chat
 - Memory
 - Brain
 - Settings
+- active brain switching
+- create brain flow
+- delete non-baseline brain flow
+- per-brain conversations
+- per-brain memory workspace
+- per-brain model preference
+- per-brain voice preference on top of shared machine-level tools
 
-If onboarding has not been completed yet, the app shows the onboarding flow instead of the main shell.
+If onboarding has not been completed yet, the onboarding flow still replaces the main shell.
 
-## Important Architectural Truths
-- ModernClaw is a Tauri desktop app with a React frontend and Rust backend.
-- The frontend talks to Rust through Tauri commands.
-- Markdown brain files live in the local app data memory path.
-- Conversation history lives in SQLite when history is enabled.
-- Ollama remains the current model provider.
-- Voice uses Whisper for input and Piper for output.
+## Most Important Architectural Truths
+- the app is a Tauri desktop app with a React frontend and Rust backend
+- the frontend talks to Rust through Tauri commands
+- markdown brain files still live in the local app-data workspace
+- conversation history still lives in SQLite when history is enabled
+- Ollama is still the model provider
+- Whisper is still used for speech-to-text
+- Piper is still used for text-to-speech
+- an `agents` registry now drives multi-brain behavior
+- the active brain controls which workspace, conversations, model preference, and voice preference are in play
 
 ## Current Internal Storage Split
-### Markdown-based workspace
+### Markdown Workspace
 Used for:
 - `SOUL.md`
 - `USER.md`
@@ -60,16 +54,34 @@ Used for:
 - daily logs
 - knowledge files
 - curator folders
-- voice tool folders
+- shared voice tool folders under the LocalAI root
+- brain-specific workspaces under `agents/<brain>/`
 
 ### SQLite
 Used for:
+- agents
 - conversations
 - messages
 - settings
+- schema version tracking
+
+## Current Model Truth
+For this repo and this product track, the clean current baseline story is Gemma-first.
+
+Current practical truth:
+- baseline lane: `gemma4:e4b`
+- model choice is persisted per brain
+- app-wide default model still exists as a fallback, but the active brain's saved model takes priority
+
+## Current Voice Truth
+Current practical truth:
+- Piper and Whisper are machine-level installs
+- approved Piper voices are currently `Amy (Female)` and `Joe (Male)`
+- brains can keep different voice choices while sharing the same machine-level install
+- speech output is normalized before Piper playback so raw markdown is not spoken literally
 
 ## Important Current Limitation
-Knowledge loading is currently flat and top-level only.
-ModernClaw loads top-level markdown files from the `knowledge` folder, not nested subfolders.
+Knowledge loading is still flat and top-level only.
+ModernClawMulti loads top-level markdown files from the live `knowledge/` folder, not nested subfolders.
 
-That means source knowledge for Rosie should eventually be compiled into compact flat files rather than a deep folder tree.
+That means expert knowledge for Rosie or future support brains should still be compiled into compact top-level files rather than deep nested trees.

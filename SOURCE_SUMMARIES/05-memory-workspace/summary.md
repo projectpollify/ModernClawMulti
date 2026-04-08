@@ -1,18 +1,18 @@
-﻿# Memory Workspace Summary
+# Memory Workspace Summary
 
 ## Purpose
-The Memory workspace is where the user inspects and edits the core markdown files that define the assistant’s long-term brain.
+The Memory workspace is where the user inspects and edits the markdown files that define the active brain's long-term context.
 
-It is the most transparent part of ModernClaw’s architecture.
+It remains one of the clearest and most transparent parts of the app.
 
 ## Where To Find It In The App
 Open the `Memory` view from the sidebar.
 
 Visible sections:
-- Open Brain overview
 - core memory files
 - daily logs
 - knowledge files
+- brain-aware workspace guidance
 
 ## What It Controls
 ### Core files
@@ -40,50 +40,14 @@ Visible sections:
 - `src/services/memory.ts`
 - Rust memory service in `src-tauri/src/services/memory.rs`
 
-## How It Works
-### Initialization
-When Memory opens, the store calls `memory_initialize()`.
-That ensures the base folder and expected files/folders exist.
-
-### Default folder structure
-The backend creates:
-- base memory folder
-- `memory/`
-- `knowledge/`
-- `curator/`
-- `tools/piper/voices`
-- `tools/whisper/models`
-
-### File loading
-The store reads:
-- `SOUL.md`
-- `USER.md`
-- `MEMORY.md`
-- daily log list
-- knowledge file list
-- curator staged packages
-- current memory base path
-
-## User Instructions
-### Edit a core brain file
-1. Open `Memory`.
-2. Click into the file card/editor for `SOUL.md`, `USER.md`, or `MEMORY.md`.
-3. Save the file.
-
-### View daily logs
-1. Open `Memory`.
-2. Use the daily log list.
-3. Select a date to inspect its log.
-
-### Add knowledge manually outside the app
-1. Open the memory folder.
-2. Place a markdown file in `knowledge/`.
-3. Return to the app and refresh Memory.
-
-### Open the storage folder
-1. In the Memory view, click `Open Folder`.
+## Current Multi-Brain Behavior
+- Memory always reflects the active brain
+- daily logs are isolated per brain
+- knowledge files are isolated per brain
+- switching brains reloads the workspace instead of leaving stale content visible
+- baseline Rosie uses the root LocalAI workspace, while created brains use `agents/<brain>/`
 
 ## Important Notes
-- The Memory workspace is the clearest view into what the assistant actually knows.
-- Knowledge loading is flat: only top-level `.md` files in `knowledge/` are loaded.
-- This is the main foundation for future expert brain creation.
+- knowledge loading is still flat: only top-level `.md` files in `knowledge/` are loaded
+- Memory is still the clearest view into what the current brain actually knows
+- the current app now makes Memory feel visibly brain-scoped, not just technically scoped

@@ -1,41 +1,25 @@
-# ModernClaw Memory Workspace
+# ModernClaw Memory
 
 ## Purpose
-The Memory view exposes the live markdown workspace behind the assistant. This is where the user can directly inspect and edit the files that shape behavior, context, and persistent knowledge.
+Memory is where the user inspects and edits the active brain's real markdown workspace.
 
 ## Where To Find It
 Open the `Memory` view from the sidebar.
 
-## Core Files
+## Main Areas
 - `SOUL.md`
 - `USER.md`
 - `MEMORY.md`
+- daily logs
+- knowledge files
 
-## Other Workspace Areas
-- daily logs under `memory/`
-- top-level knowledge files under `knowledge/`
-- curator folders under `curator/`
-- voice tool folders under `tools/`
+## Current Multi-Brain Truth
+- Memory always reflects the active brain
+- daily logs are isolated per brain
+- knowledge files are isolated per brain
+- switching brains reloads the workspace so stale content does not remain visible
 
-## Main Memory View Functions
-- open the storage folder
-- refresh the current memory snapshot
-- edit and save core files
-- inspect daily logs
-- inspect knowledge files
-
-## Knowledge Files
-The Memory view can list top-level knowledge markdown files. This reflects the same flat loading rule used by the runtime context builder.
-
-## Daily Logs
-The system can keep daily notes that become part of live context for the current day.
-
-## Why This Matters
-Memory is one of ModernClaw's core differentiators. The user can see and control what the assistant is being shaped by instead of treating the context system as a black box.
-
-## User Guidance
-1. Open `Memory`.
-2. Review `SOUL.md` to shape behavior and tone.
-3. Review `USER.md` to shape user context.
-4. Review `MEMORY.md` for current priorities and durable notes.
-5. Add compact top-level knowledge files for domain expertise.
+## Important Notes
+- knowledge loading is still flat and top-level only
+- the baseline Rosie brain uses the root LocalAI workspace
+- created brains use workspaces under `agents/<brain>/`

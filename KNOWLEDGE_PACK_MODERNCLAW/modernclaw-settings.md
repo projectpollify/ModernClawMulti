@@ -16,42 +16,40 @@ Open the `Settings` view from the sidebar or the header settings button.
 - Storage
 - onboarding restart and reset actions
 
-## Important Settings
-### Appearance
-- theme selection
+## Important Product Rule
+Settings is now a hybrid surface.
+Some values are machine-level or app-wide.
+Some values belong to the active brain.
 
-### Model
-- default model
+## Global / Machine-Level Settings
+- theme
 - context window size
-
-### Behavior
 - stream responses
 - send on Enter
 - show token count
-
-### Privacy
 - save conversation history
+- memory folder display
+- Piper executable path
+- Whisper executable path
 
-### Voice Output
+## Brain-Level Settings
+- preferred model for the active brain
 - enable voice output
 - approved voice selection
-- Piper executable path
 - Piper voice model path
-- refresh status
-- test voice
-
-### Voice Input
 - enable voice input
-- Whisper executable path
 - Whisper model path
-- language
-- refresh status
+- Whisper language
 
-### Storage
-- memory folder display
-- open memory folder
-- reset settings
-- restart onboarding
+## Current Voice Truth
+- machine-level Piper and Whisper executables are shared
+- brains can keep different voice choices
+- current approved Piper voices are `Amy (Female)` and `Joe (Male)`
+- the active brain can therefore sound distinct without requiring a separate Piper install
 
-## Important Product Rule
-Settings is where the user controls the system contract. It is not just cosmetic configuration. Changes here can directly affect prompt context size, persistence behavior, active model, and voice readiness.
+## Important Product Rule About Models
+The app-wide default model is a fallback.
+If the active brain has its own saved model, that brain-level choice takes priority.
+
+## Why This Matters
+Settings is part of the system contract. It now shapes both the machine-level environment and the active brain experience.

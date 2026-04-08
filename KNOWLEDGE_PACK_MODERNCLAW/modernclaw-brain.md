@@ -1,55 +1,24 @@
-# ModernClaw Brain Builder
+# ModernClaw Brain
 
 ## Purpose
-The Brain view is the product's explicit brain-improvement workflow. It turns system shaping into a visible, reviewable process instead of silent background mutation.
+The Brain view is the guided workflow layer for improving the active brain explicitly.
 
 ## Where To Find It
 Open the `Brain` view from the sidebar.
 
-## Main Sections
+## Main Areas
 - guided setup
 - question queue
-- suggestion lifecycle panels
+- suggestions
 - knowledge intake
-- recent brain activity
-- recent knowledge additions
+- recent activity
+- Curator Inbox
 
-## Guided Setup
-Guided setup helps the user fast-start the brain by writing structured starter sections into:
-- `SOUL.md`
-- `USER.md`
-- `MEMORY.md`
+## Current Multi-Brain Truth
+- Brain is now scoped to the active brain
+- drafts and feedback reset cleanly on brain switch
+- applying setup or knowledge changes affects only the active brain workspace
 
-Prompted fields include:
-- primary role
-- what help is needed
-- collaboration style
-- current priorities
-
-## Question Queue
-This is a dedicated place for high-value missing-context questions that the system wants answered.
-
-## Suggestion Lifecycle
-Suggestions can move through statuses such as:
-- pending
-- deferred
-- accepted
-- dismissed
-
-This makes brain evolution visible and reviewable.
-
-## Knowledge Intake
-The Brain can create structured knowledge files using fields such as:
-- title
-- summary
-- tags
-- source
-- content
-
-These become markdown files in the live knowledge workspace.
-
-## Activity History
-Brain actions are logged into a recent activity history so the user can see what changed and when.
-
-## Why This Matters
-This is one of the main layers that makes ModernClaw more than a normal local chat app. It gives the user an explicit workflow for shaping intelligence over time.
+## Important Notes
+- Brain remains review-based instead of silently mutating memory
+- Curator is part of this same brain-improvement layer

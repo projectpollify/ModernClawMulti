@@ -8,25 +8,13 @@ The voice system adds fully local speech input and output to the workspace.
 - assistant message controls for voice output
 - Settings view for voice configuration and testing
 
-## Voice Output
-### Stack
-- Piper for text-to-speech
-
-### What It Does
-The user can click `Read Aloud` on an assistant message. ModernClaw sends the text to Piper, receives audio data, and plays it locally in the app.
-
-### Current Playback Controls
-- Read Aloud
-- Pause Reading
-- Resume Reading
-- Stop reading behavior through playback control state
-
-## Voice Input
-### Stack
-- Whisper CLI for speech-to-text
-
-### What It Does
-The user can record locally from the chat composer. The app converts the recording to WAV, sends it to Whisper, and places the transcript into the text box for review before sending.
+## Current Voice Truth
+- Whisper is used for speech-to-text
+- Piper is used for text-to-speech
+- Piper and Whisper executables are shared machine-level tools
+- brains can keep different voice preferences on top of that shared install
+- current approved Piper voices are `Amy (Female)` and `Joe (Male)`
+- assistant text is normalized for speech before Piper playback
 
 ## Settings and Defaults
 Voice settings include:
@@ -39,14 +27,8 @@ Voice settings include:
 - Whisper model path
 - transcription language
 
-ModernClawMulti now uses one shared machine-level Piper and Whisper install while allowing each brain to keep its own voice selection.
-
-Current approved Piper voices:
-- `Amy (Female)`
-- `Joe (Male)`
-
 ## Important Current Limitation
-ModernClaw currently prepares the folders and expected paths, but dependency delivery is still manual. Piper, Whisper, and their models still need to be installed or placed into those folders.
+Dependency delivery is still manual. Piper, Whisper, and their models still need to be installed or placed into the expected folders.
 
 ## Why This Matters
-A local voice loop makes the assistant feel much more alive while preserving the product's owned-intelligence and offline direction.
+A local voice loop makes the assistant feel much more alive while preserving the product's owned-intelligence and offline direction. The new speech-normalization layer also makes read-aloud much more natural than raw markdown playback.

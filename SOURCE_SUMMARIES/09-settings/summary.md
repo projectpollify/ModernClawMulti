@@ -1,17 +1,11 @@
-﻿# Settings Summary
+# Settings Summary
 
 ## Purpose
-Settings control the main user-configurable behavior of ModernClaw.
+Settings controls the main user-configurable behavior of ModernClawMulti.
 
-This includes:
-- appearance
-- model defaults
-- context window size
-- chat behavior
-- voice setup
-- privacy/history
-- storage path visibility
-- reset and onboarding restart actions
+This now includes both:
+- global machine/app settings
+- brain-specific settings that belong to the active brain
 
 ## Where To Find It In The App
 Open `Settings` from the sidebar or the header gear button.
@@ -19,57 +13,46 @@ Open `Settings` from the sidebar or the header gear button.
 ## Main Component
 - `src/components/settings/SettingsView.tsx`
 
-## Store and Backend
+## Stores and Backend
 - `src/stores/settingsStore.ts`
+- `src/stores/agentStore.ts`
 - `src/services/settings.ts`
+- `src/services/agents.ts`
 - Rust settings commands
 - SQLite `settings` table
+- `agents` table for brain-level model and voice preferences
 
 ## Settings Categories
-### Appearance
-- theme: system, light, dark
-
-### Model
-- default model
+### Global / Machine-Level
+- theme
 - context window size
-
-### Behavior
 - stream responses
 - send on enter
 - show token count
-
-### Voice Output
-- enable output
-- approved voice preset
-- Piper executable path
-- Piper model path
-- output status and test controls
-
-### Voice Input
-- enable input
-- Whisper executable path
-- Whisper model path
-- whisper language
-- input status controls
-
-### Privacy
 - save conversation history
-
-### Storage
 - memory folder display
-- open folder shortcut
+- Piper executable path
+- Whisper executable path
+- onboarding restart and reset actions
 
-### Recovery Actions
-- restart onboarding
-- reset all settings
+### Brain-Level
+- preferred model for the active brain
+- enable voice output
+- approved voice selection
+- Piper voice model path
+- enable voice input
+- Whisper model path
+- Whisper language
 
 ## How It Works
-Settings are loaded at app startup.
-The settings store:
-1. initializes the memory service
-2. fetches persisted settings
-3. resolves the real memory path
-4. auto-fills default voice paths when specific paths are missing
+Settings are loaded at app startup and reloaded when the active brain changes.
+
+The system now combines:
+1. global app settings from the `settings` table
+2. active brain settings from the `agents` table
+3. default shared voice paths derived from the LocalAI tools folder
+
+That means the user sees one Settings view, but some values are shared machine-wide and others belong only to the active brain.
 
 ## Important Behavior
 ### Save Conversation History
@@ -77,26 +60,36 @@ If turned off:
 - conversations are not kept in SQLite
 - the app clears stored conversation state from the UI layer
 
-### Reset All Settings
-Reset returns settings to defaults and re-resolves the voice paths based on the current memory path.
+### Model Ownership
+- the app-wide default model is a fallback
+- the active brain's saved model takes priority when present
 
-### Restart Onboarding
-Lets the user re-run the first-run setup flow without reinstalling the app.
+### Voice Ownership
+- Piper and Whisper executable paths remain machine-level by default
+- voice choice and voice model path can belong to the active brain
+- multiple brains can share one Piper/Whisper install while sounding different
+
+### Reset All Settings
+Reset returns the global settings to defaults and re-resolves the shared voice paths.
+It does not mean the app becomes a single-brain app again.
 
 ## User Instructions
-### Change the default model
-1. Open `Settings`.
-2. Change the `Default Model` dropdown.
-
-### Change theme
-1. Open `Settings`.
-2. Select system, light, or dark.
-
-### Check the memory folder
+### Check the active brain's storage context
 1. Open `Settings`.
 2. Find the `Storage` section.
-3. Click `Open`.
+3. Confirm the memory folder path reflects the current brain workspace.
+
+### Change the active brain's voice
+1. Open `Settings`.
+2. Go to `Voice Output`.
+3. Choose the approved voice for the active brain.
+4. Refresh output status and test voice.
+
+### Change the active brain's model
+1. Use the header model selector for fast switching.
+2. Use Settings when you want to inspect broader model management.
 
 ## Important Notes
-- Settings are part of the main app identity and should stay understandable to non-technical users.
-- The voice sections are currently the most setup-heavy parts of the app.
+- Settings is no longer a purely global config surface
+- the current app uses a hybrid model: some settings are machine-level, some are brain-level
+- the voice sections remain the most setup-heavy parts of the app because dependency delivery is still manual

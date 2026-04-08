@@ -1,50 +1,32 @@
-# ModernClaw Chat and Conversations
+# ModernClaw Chat
 
 ## Purpose
-Chat is the direct interaction layer with the currently selected local model. It combines live prompt context, persisted conversation history, optional token display, and voice controls.
+Chat is the main interactive conversation surface for the active brain.
 
 ## Where To Find It
-Open the main app and stay in the default `Chat` view.
+- main chat view
+- sidebar conversation list
+- message composer at the bottom
 
-## Main Elements
-- message list
-- text composer
-- send button
-- mic button when voice input is enabled
-- read-aloud controls on assistant messages when voice output is enabled
-- error banner for chat or voice failures
+## Current Multi-Brain Truth
+- each brain has its own conversation history
+- switching brains restores the latest conversation for that brain when one exists
+- switching brains should not leak streamed output into the wrong brain
+- new chat starts a new conversation for the active brain, not for all brains
 
-## Message Flow
-When the user sends a message:
-1. the app makes sure there is an active conversation
-2. it builds prompt context from brain files, daily log, knowledge, and recent conversation history
-3. it sends the request through the Rust backend to Ollama
-4. streamed chunks update the current assistant response live
-5. final messages can be persisted if history is enabled
+## How It Works
+1. user types into the composer
+2. if needed, a new conversation is created for the active brain
+3. context is built from the active brain's markdown files, logs, and knowledge
+4. the prompt is sent to Ollama
+5. streamed chunks are shown in the active conversation
+6. final messages are persisted if history is enabled
 
-## Conversation History
-If `saveConversationHistory` is enabled:
-- conversations are stored in SQLite
-- messages are stored in SQLite
-- the sidebar conversation list survives restart
+## Voice Hooks
+- voice input can transcribe into the composer
+- read-aloud can speak assistant messages
+- read-aloud now uses speech-normalized text so raw markdown is not spoken literally
 
-If it is disabled:
-- history is cleared from persistent storage usage in the live flow
-- chat behaves more like a temporary workspace
-
-## Titles
-New conversations begin as `New Chat`. After the first user message, the app can generate a better title from that prompt.
-
-## Voice in Chat
-### Voice Input
-If voice input is enabled and Whisper is configured, the mic button records locally, transcribes locally, and places the transcript into the text box for review.
-
-### Voice Output
-If voice output is enabled and Piper is configured, assistant messages can be read aloud with pause and resume support.
-
-## User Guidance
-1. Pick a model.
-2. Start or select a conversation.
-3. Type or dictate a prompt.
-4. Read or listen to the answer.
-5. Use the sidebar to return to older persisted conversations.
+## Important Notes
+- chat depends on the active brain's selected model
+- if history is enabled, persistence is isolated per brain

@@ -15,31 +15,20 @@ The onboarding flow appears automatically until the onboarding-complete flag is 
 
 ## Step Details
 ### Welcome
-Introduces ModernClaw as a private, local-first workspace with editable memory and direct model control.
+Introduces ModernClawMulti as a private, local-first workspace with editable memory, direct model control, and a multi-brain system that opens after the initial setup is complete.
 
 ### Ollama
-Checks whether the local Ollama service is available on `localhost:11434`. This step confirms the model provider is reachable before the rest of setup continues.
+Checks whether the local Ollama service is available on `localhost:11434`.
 
 ### Model
-Pushes the user toward a proven baseline setup. The current opinionated recommendation is a small floor model first, with `dolphin3:8b` offered as an optional stronger fallback.
+Guides the user toward the current baseline lane for this repo and product track:
+- `gemma4:e4b`
 
 ### Memory
 Initializes the markdown workspace and explains the memory path. This step creates the initial brain-file environment.
 
 ### Complete
-Marks onboarding finished and sends the user into the full app shell.
-
-## What Onboarding Creates
-At minimum, the memory service ensures these files exist:
-- `SOUL.md`
-- `USER.md`
-- `MEMORY.md`
-
-It also creates key folders for:
-- memory logs
-- knowledge files
-- curator staging
-- voice tools
+Marks onboarding finished and sends the user into the full multi-brain app shell.
 
 ## Why This Matters
-Onboarding is not just a cosmetic tour. It is the first-time system bootstrap for the brain workspace.
+Onboarding is not just a cosmetic tour. It is the first-time bootstrap for the baseline brain workspace that later multi-brain features build on.
