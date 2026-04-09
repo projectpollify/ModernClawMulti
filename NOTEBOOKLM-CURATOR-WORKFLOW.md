@@ -77,8 +77,8 @@ The Chrome Agent opens the NotebookLM notebook tab and:
 5. Asks targeted follow-up questions in the NotebookLM chat if needed
 6. Captures all extracted content as structured raw material
 
-**What triggers this stage:** a Curator Request form with a `Source: NotebookLM`
-field pointing to a specific notebook URL.
+**What triggers this stage:** a Curator request that resolves to NotebookLM mode and
+points to a specific notebook URL.
 
 **Output of this stage:** raw extracted content (text, structured data, screenshot
 paths) passed to the Transformation Agent.
@@ -154,24 +154,25 @@ Inbox -> Refresh. Package appears. User reads the summary and approves or reject
 
 ---
 
-## What Needs to Be Built
+## Current Build State
 
 | Component | Status | Notes |
 |---|---|---|
 | Curator Agent (base) | Built | Watches requests/, produces packages |
 | Dynamic workspace resolver | Built | Reads active agent from DB |
-| Request form template | Built | In agents/joe/curator/requests/ |
-| Chrome Extraction Agent | Not built | New - reads NotebookLM via browser |
-| Transformation pipeline | Not built | New - converts extraction to curator format |
-| NotebookLM request form fields | Not built | Need Source, Notebook URL, Output Type fields |
-| Visual handling logic | Not built | Tier 1/2/3 processing for images/charts |
+| Request form template | Built | Included in `CURATOR_REQUESTS/` and live runtime workflow |
+| NotebookLM request fields | Built in docs / compatibility path | Request template and parser rules exist |
+| Curator one-box intake interpreter | Partially built | Defined in specs, not yet a first-class app flow |
+| Chrome Extraction Agent | Not built | Still the major missing execution layer |
+| Transformation pipeline | Partially built | General Curator packaging exists; NotebookLM-specific extraction-to-transform path is not live yet |
+| Visual handling logic | Not built | Tier 1/2/3 processing still future work |
+| Rosie verification layer | Not built in app flow | Designed, but not integrated into Curator review UX |
 
 ---
 
 ## The Extended Request Form (NotebookLM Mode)
 
-The existing Curator Knowledge Request form needs two new optional fields to support
-NotebookLM as a source:
+The compatibility Curator Knowledge Request form now supports NotebookLM with these fields:
 
 ```markdown
 ## Source
@@ -212,10 +213,10 @@ numerically, the data cannot be reconstructed - only screenshotted.
 
 ## Recommended Build Order
 
-1. Extend the request form with Source / Notebook URL / Output Type fields
-2. Update the Curator Agent to detect NotebookLM mode vs. web research mode
-3. Build and test the Chrome Extraction Agent on a real notebook
-4. Build the Transformation layer for text content first
+1. Build the real Chrome extraction path for one NotebookLM output type first
+2. Feed that raw extraction into the existing Curator package format
+3. Validate one end-to-end path: notebook -> staged package -> Curator Inbox approval
+4. Add stronger provenance and optional raw extraction artifacts to the package
 5. Add Tier 1 visual handling (mind map -> Markdown outline)
-6. Add Tier 2 visual handling (data -> generated chart) if needed
-7. End-to-end test: notebook -> staged package -> Curator Inbox approval
+6. Add Rosie verification once package generation is dependable
+7. Expand to richer NotebookLM output types only after the simplest path is stable
