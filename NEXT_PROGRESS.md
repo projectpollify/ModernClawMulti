@@ -63,6 +63,7 @@ Updated in this pass:
 
 - No automated tests yet for multi-brain workflows
 - Knowledge and curator content added outside the app still requires refresh
+- External Curator automation must follow the active brain workspace path rather than the top-level `LocalAI\curator\` root
 - Bundle size warning remains from Vite chunking
 - Voice dependency delivery is still manual on clean machines
 - Whisper validation still needs a fresh-machine confirmation pass after the Piper cleanup
@@ -72,5 +73,6 @@ Updated in this pass:
 
 If continuing feature work, the strongest next paths are:
 1. continue targeted Phase 4 validation on the remaining less-traveled surfaces
-2. decide whether Whisper settings need any further per-brain polish after the Piper pass
-3. avoid wizard/support work until the remaining workspace truths feel stable
+2. decide whether Curator and Rosie should become first-class brain-scoped automation layers in the app itself
+3. decide whether Whisper settings need any further per-brain polish after the Piper pass
+4. avoid wizard/support work until the remaining workspace truths feel stable

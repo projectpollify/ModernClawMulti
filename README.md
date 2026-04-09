@@ -108,6 +108,11 @@ Current behavior:
 - imports are brain-scoped
 - curator state is isolated across brains
 
+Important current integration detail:
+- the live Curator inbox follows the active brain workspace path
+- when external automation prepares curator packages, it must target the active brain workspace rather than assuming one shared root curator folder
+- in practice that means the live inbox may resolve under `LocalAI/agents/<active-brain>/curator/` rather than the top-level `LocalAI/curator/` root
+
 ## Models
 
 ModernClawMulti currently uses a Gemma-first baseline.
@@ -201,6 +206,8 @@ Core stack:
 - `local-ai/`: app source
 - `SOURCE_SUMMARIES/`: source-layer feature documentation
 - `KNOWLEDGE_PACK_MODERNCLAW/`: compiled runtime-oriented knowledge pack
+- `CURATOR_REQUESTS/`: helper/reference folder for curator request-form work, not the live runtime inbox
+- `CURATOR_STAGED/`: helper/reference folder for staged-package work, not the live runtime inbox
 - `MULTI_BRAIN_IMPLEMENTATION_PLAN.md`: implementation roadmap
 - `MULTI_BRAIN_STATUS.md`: current truth and validation status
 - `MULTI_BRAIN_TEST_PLAN.md`: testing notes

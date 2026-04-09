@@ -131,6 +131,26 @@ Validated live:
 - Curator staged packages are read from the active brain's `curator/staged/` area.
 - Packages added outside the app appear in the Curator Inbox after refresh.
 
+### Active Brain Workspace Path Matters
+
+Important current behavior:
+
+- the Tauri backend resolves memory services from the active brain workspace stored in the app database
+- that means the live Curator inbox may read from `%APPDATA%\LocalAI\agents\<active-brain>\curator\staged\` instead of `%APPDATA%\LocalAI\curator\staged\`
+- the same applies to imports into `knowledge/`
+
+Practical rule for automation:
+
+- Curator automation must resolve the active brain workspace dynamically
+- do not assume the top-level `LocalAI\curator\` folders are the live app inbox
+- if the active brain is `joe`, the live Curator folders are under `%APPDATA%\LocalAI\agents\joe\curator\`
+- if the active brain changes, the automation should follow that workspace automatically
+
+Repository note:
+
+- repo-root helper folders such as `CURATOR_REQUESTS/` and `CURATOR_STAGED/` are not the live runtime inbox used by the app
+- they may be useful for templates or workflow notes, but external automation must target the active runtime workspace instead
+
 ## Local Data Location
 
 The app still uses the older `LocalAI` app-data root for runtime memory and knowledge files, including:
@@ -142,6 +162,10 @@ The app still uses the older `LocalAI` app-data root for runtime memory and know
 - `curator/`
 - `tools/`
 - `agents/`
+
+When managed brain workspaces are in use, active runtime files may instead live under:
+
+- `%APPDATA%\LocalAI\agents\<active-brain>\`
 
 ## Current Model Stack
 

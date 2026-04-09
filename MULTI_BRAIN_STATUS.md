@@ -71,6 +71,8 @@ Phase 4: Full Workspace Integration
 - Settings now reload with the active brain so workspace path information updates correctly on switch
 - curator import and reject actions were fixed after a Tauri payload mismatch blocked the buttons
 - curator import was re-validated end to end and imported knowledge stays isolated to the correct brain
+- active-brain workspace resolution is now the governing rule for external Curator integration as well as internal app state
+- Curator automation now needs to target the active brain workspace instead of assuming the top-level `LocalAI\curator\` root
 - brain-level voice settings added for output/input preferences and model paths
 - shared machine-level Piper and Whisper defaults now resolve correctly even when the active brain lives under `agents/<brain>`
 - old brain-local tool paths now fall back safely to the shared machine install instead of staying pinned to empty per-brain `tools/` folders
@@ -101,12 +103,14 @@ Phase 4: Full Workspace Integration
 - keep Brain and daily-log draft surfaces from carrying stale state across brain switches
 - keep Settings workspace information aligned with the currently active brain
 - import staged curator knowledge into the correct brain workspace without cross-brain bleed
+- require external Curator staging to land in the active brain workspace if the packages are meant to appear in the live Curator Inbox
 - give Rosie and Joe different validated Piper voices without requiring separate Piper installs
 - run Joe as a live support and customer service brain with his own workspace, support files, and ModernClaw knowledge pack
 
 ## What Is Still Missing
 - broader Phase 4 stress-testing of all remaining brain-scoped workflows under real use
 - final review of whether any hidden single-brain assumptions remain in less frequently used surfaces
+- cleanup of any stale docs or helper folders that still imply one shared root Curator inbox
 - optional archive-brain support if later needed
 - formal product entry points for the support brain
 - the full wizard system for guided brain creation and refinement

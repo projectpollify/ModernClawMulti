@@ -133,6 +133,12 @@ The app stores local Markdown context files under the LocalAI app-data memory fo
 - shared voice tool folders in `tools/`
 - per-brain workspaces under `agents/<brain>/`
 
+Important runtime detail:
+
+- the app resolves memory, knowledge, and curator folders from the active brain workspace
+- when external automation prepares curator packages, it must target the active brain workspace rather than assuming one shared root curator folder
+- in practice the live Curator inbox may resolve under `LocalAI/agents/<active-brain>/curator/`
+
 ## Known Limitations
 
 - Ollama is a required external dependency
