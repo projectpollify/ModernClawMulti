@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
+import { CURATED_FLOOR_MODELS, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { cn } from '@/lib/utils';
 import { useModelStore } from '@/stores/modelStore';
 
@@ -8,15 +8,6 @@ interface ModelStepProps {
   onNext: () => void;
   onBack: () => void;
 }
-
-const RECOMMENDED_MODELS = [
-  {
-    name: DEFAULT_FLOOR_MODEL,
-    size: '9.6GB',
-    description: 'Primary Gemma 4 setup for ModernClawMulti. Use this lane while we prove multi-brain behavior and quality.',
-    recommended: true,
-  },
-];
 
 export function ModelStep({ onNext, onBack }: ModelStepProps) {
   const models = useModelStore((state) => state.models);
@@ -44,7 +35,7 @@ export function ModelStep({ onNext, onBack }: ModelStepProps) {
     <StepShell
       eyebrow="Step 2"
       title="Choose a Model"
-      description="Install the primary Gemma 4 model so ModernClawMulti has one strong default lane while we test multi-brain behavior."
+      description="Install a supported Gemma 4 model so ModernClawMulti starts from a strong default lane, with a lighter sibling available if you want a smaller local footprint while testing multi-brain behavior."
       onBack={onBack}
       onNext={onNext}
       nextDisabled={!hasModels}
@@ -58,7 +49,7 @@ export function ModelStep({ onNext, onBack }: ModelStepProps) {
         </div>
       ) : (
         <div className="grid gap-3">
-          {RECOMMENDED_MODELS.map((model) => (
+          {CURATED_FLOOR_MODELS.map((model) => (
             <label
               key={model.name}
               className={cn(
@@ -157,3 +148,4 @@ function StepShell({
     </div>
   );
 }
+

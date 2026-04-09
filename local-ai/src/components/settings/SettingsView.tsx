@@ -1,8 +1,8 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ModelCard } from '@/components/models/ModelCard';
 import { ModelDownloader } from '@/components/models/ModelDownloader';
-import { CURATED_PIPER_VOICES, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
+import { CURATED_FLOOR_MODELS, CURATED_PIPER_VOICES, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { getEffectiveVoiceSettings } from '@/lib/voiceSettings';
 import { getDefaultVoicePaths } from '@/lib/voicePaths';
 import { cn } from '@/lib/utils';
@@ -13,8 +13,9 @@ import { useModelStore } from '@/stores/modelStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useVoiceStore } from '@/stores/voiceStore';
+import { historyApi } from '@/services/history';
 import { memoryApi } from '@/services/memory';
-import type { AgentVoiceSettings, Theme } from '@/types';
+import type { AgentVoiceSettings, MessageFeedbackSummary, Theme } from '@/types';
 
 const CONTEXT_WINDOW_OPTIONS = [2048, 4096, 8192, 16384, 32768];
 const WHISPER_LANGUAGE_OPTIONS = [
@@ -30,6 +31,7 @@ const WHISPER_LANGUAGE_OPTIONS = [
 
 export function SettingsView() {
   const activeAgent = useAgentStore((state) => state.activeAgent);
+  const updateActiveAgentDefaultModel = useAgentStore((state) => state.updateActiveAgentDefaultModel);
   const updateActiveAgentVoiceSettings = useAgentStore((state) => state.updateActiveAgentVoiceSettings);
   const { settings, isLoading, error, updateSetting, resetSettings, clearError } = useSettingsStore();
   const currentTheme = useThemeStore((state) => state.theme);
@@ -52,12 +54,35 @@ export function SettingsView() {
   const checkInputStatus = useVoiceStore((state) => state.checkInputStatus);
   const speakMessage = useVoiceStore((state) => state.speakMessage);
   const clearVoiceError = useVoiceStore((state) => state.clearError);
+  const [feedbackSummary, setFeedbackSummary] = useState<MessageFeedbackSummary | null>(null);
+  const [isLoadingFeedbackSummary, setIsLoadingFeedbackSummary] = useState(false);
+
+  const loadFeedbackSummary = async () => {
+    if (!settings.saveConversationHistory) {
+      setFeedbackSummary(null);
+      return;
+    }
+
+    setIsLoadingFeedbackSummary(true);
+    try {
+      const summary = await historyApi.getMessageFeedbackSummary();
+      setFeedbackSummary(summary);
+    } catch {
+      setFeedbackSummary(null);
+    } finally {
+      setIsLoadingFeedbackSummary(false);
+    }
+  };
 
   useEffect(() => {
     if (!ollamaStatus) {
       void refreshModels();
     }
   }, [ollamaStatus, refreshModels]);
+
+  useEffect(() => {
+    void loadFeedbackSummary();
+  }, [settings.saveConversationHistory]);
 
   const effectiveVoiceSettings = useMemo(
     () => getEffectiveVoiceSettings(settings, activeAgent),
@@ -101,14 +126,12 @@ export function SettingsView() {
 
   const modelOptions = useMemo(() => {
     const installedNames = new Set(models.map((model) => model.name));
-    const preferred = [
-      {
-        name: DEFAULT_FLOOR_MODEL,
-        label: installedNames.has(DEFAULT_FLOOR_MODEL)
-          ? `${DEFAULT_FLOOR_MODEL} (primary lane, installed)`
-          : `${DEFAULT_FLOOR_MODEL} (primary lane)`,
-      },
-    ];
+    const preferred = CURATED_FLOOR_MODELS.map((model) => ({
+      name: model.name,
+      label: installedNames.has(model.name)
+        ? `${model.name} (${model.recommended ? 'primary lane' : 'lighter lane'}, installed)`
+        : `${model.name} (${model.recommended ? 'primary lane' : 'lighter lane'})`,
+    }));
     const seen = new Set<string>();
 
     return [...preferred, ...models.map((model) => ({ name: model.name, label: model.name }))].filter((option) => {
@@ -140,19 +163,14 @@ export function SettingsView() {
     }
   };
 
-  const handleDefaultModelChange = async (value: string) => {
+  const handleWorkspaceModelChange = async (value: string) => {
     const previousModel = currentModel;
     const nextModel = value || null;
     setCurrentModel(nextModel);
-    const didPersist = await updateSetting('defaultModel', nextModel);
-
-    if (!didPersist) {
+    try {
+      await updateActiveAgentDefaultModel(nextModel);
+    } catch {
       setCurrentModel(previousModel);
-      return;
-    }
-
-    if (!nextModel) {
-      await refreshModels();
     }
   };
 
@@ -188,6 +206,7 @@ export function SettingsView() {
 
     setTheme('system');
     setCurrentModel(DEFAULT_FLOOR_MODEL);
+    await updateActiveAgentDefaultModel(DEFAULT_FLOOR_MODEL);
     await refreshModels();
     await loadConversations();
   };
@@ -244,15 +263,14 @@ export function SettingsView() {
 
             <SettingsSection title="Model">
               <SettingRow
-                label="Default Model"
-                description="This is the app-wide fallback model. If the active brain has its own saved model, that brain-level choice takes priority."
+                label="Workspace Model"
+                description="Choose the default model for this workspace. The header model picker and the model tools below update the same saved preference."
               >
                 <select
-                  value={settings.defaultModel ?? ''}
-                  onChange={(event) => void handleDefaultModelChange(event.target.value)}
+                  value={activeAgent?.defaultModel ?? currentModel ?? ''}
+                  onChange={(event) => void handleWorkspaceModelChange(event.target.value)}
                   className="max-w-[320px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 >
-                  <option value="">Auto (first installed)</option>
                   {modelOptions.map((option) => (
                     <option key={option.name} value={option.name}>
                       {option.label}
@@ -314,7 +332,7 @@ export function SettingsView() {
             <SettingsSection title="Voice Output">
               <SettingRow
                 label="Enable Voice Output"
-                description="Turn on local text-to-speech so assistant replies can be spoken through Piper for the active brain."
+                description="Turn on local text-to-speech so assistant replies can be spoken through Piper in this workspace."
               >
                 <Toggle
                   checked={effectiveVoiceSettings.enableVoiceOutput}
@@ -323,8 +341,8 @@ export function SettingsView() {
               </SettingRow>
 
               <SettingRow
-                label="Approved Voice"
-                description="Choose a curated voice for the active brain. Rosie and Mia can use different voices while still sharing the same local Piper install."
+                label="Selected Voice"
+                description="Choose a curated voice for this workspace while still using the shared machine-level Piper install."
               >
                 <select
                   value={effectiveVoiceSettings.piperVoicePreset}
@@ -355,7 +373,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Piper Voice Model"
-                description="This path belongs to the active brain. Choosing a curated voice above points this brain at the matching model file automatically."
+                description="This workspace uses the matching Piper voice model file. Choosing a curated voice above points to the expected path automatically."
                 stackOnMobile
               >
                 <input
@@ -369,7 +387,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Voice Output Status"
-                description="Check whether Piper and the selected voice model are available for the active brain on this machine."
+                description="Check whether Piper and the selected voice model are available for this workspace on this machine."
                 stackOnMobile
               >
                 <div className="flex flex-wrap items-center justify-end gap-2">
@@ -404,7 +422,7 @@ export function SettingsView() {
             <SettingsSection title="Voice Input">
               <SettingRow
                 label="Enable Voice Input"
-                description="Turn on local speech-to-text for the active brain so the microphone can transcribe into the composer through Whisper."
+                description="Turn on local speech-to-text so the microphone can transcribe into the composer through Whisper in this workspace."
               >
                 <Toggle
                   checked={effectiveVoiceSettings.enableVoiceInput}
@@ -428,7 +446,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Whisper Model"
-                description="This path belongs to the active brain. Override it only if this brain needs a different transcription model than the machine default."
+                description="Override this only if your workspace needs a different transcription model than the machine default."
                 stackOnMobile
               >
                 <input
@@ -442,7 +460,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Voice Input Language"
-                description="Use auto-detect or lock Whisper to a language for faster, cleaner transcription in the active brain."
+                description="Use auto-detect or lock Whisper to a language for faster, cleaner transcription in this workspace."
               >
                 <select
                   value={effectiveVoiceSettings.whisperLanguage}
@@ -459,7 +477,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Voice Input Status"
-                description="Check whether Whisper and the selected transcription model are available for the active brain on this machine."
+                description="Check whether Whisper and the selected transcription model are available for this workspace on this machine."
                 stackOnMobile
               >
                 <div className="flex flex-wrap items-center justify-end gap-2">
@@ -524,12 +542,19 @@ export function SettingsView() {
           </div>
 
           <aside className="space-y-6">
+            <FeedbackSummaryCard
+              summary={feedbackSummary}
+              isLoading={isLoadingFeedbackSummary}
+              historyEnabled={settings.saveConversationHistory}
+              onRefresh={() => void loadFeedbackSummary()}
+            />
+
             <section className="rounded-[30px] border border-border bg-background/75 p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold tracking-tight">Model Management</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Each brain can keep its own preferred model. Use the header model picker or the model cards below to save the current model to the active brain.
+                    Use the header model picker or the model cards below to save the current model for this workspace.
                   </p>
                 </div>
                 <span className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">
@@ -675,5 +700,92 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (value: boo
         )}
       />
     </button>
+  );
+}
+
+function FeedbackSummaryCard({
+  summary,
+  isLoading,
+  historyEnabled,
+  onRefresh,
+}: {
+  summary: MessageFeedbackSummary | null;
+  isLoading: boolean;
+  historyEnabled: boolean;
+  onRefresh: () => void;
+}) {
+  const ratedCount = summary?.ratedCount ?? 0;
+  const helpfulCount = summary?.helpfulCount ?? 0;
+  const notUsefulCount = summary?.notUsefulCount ?? 0;
+  const assistantMessageCount = summary?.assistantMessageCount ?? 0;
+  const helpfulRate = ratedCount > 0 ? Math.round((helpfulCount / ratedCount) * 100) : null;
+
+  return (
+    <section className="rounded-[30px] border border-border bg-background/75 p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Response Feedback</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Track whether assistant replies are matching what users actually wanted.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading || !historyEnabled}>
+          {isLoading ? 'Refreshing...' : 'Refresh'}
+        </Button>
+      </div>
+
+      {!historyEnabled ? (
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-background/70 p-4 text-sm text-muted-foreground">
+          Enable conversation history to save and summarize thumbs up/down feedback.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MetricTile label="Helpful" value={helpfulCount.toLocaleString()} tone="up" />
+            <MetricTile label="Not Useful" value={notUsefulCount.toLocaleString()} tone="down" />
+            <MetricTile label="Rated Replies" value={ratedCount.toLocaleString()} />
+            <MetricTile label="All Assistant Replies" value={assistantMessageCount.toLocaleString()} />
+          </div>
+
+          <div className="rounded-2xl border border-border bg-background/70 p-4 text-sm">
+            {helpfulRate === null ? (
+              <p className="text-muted-foreground">
+                No response feedback has been recorded yet. Once users start rating replies, this workspace will show how often the assistant is landing well.
+              </p>
+            ) : (
+              <p>
+                Current helpful rate: <span className="font-semibold">{helpfulRate}%</span> of rated assistant replies.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: 'up' | 'down';
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-2xl border p-4',
+        tone === 'up'
+          ? 'border-emerald-500/20 bg-emerald-500/10'
+          : tone === 'down'
+            ? 'border-rose-500/20 bg-rose-500/10'
+            : 'border-border bg-background/70'
+      )}
+    >
+      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+    </div>
   );
 }
