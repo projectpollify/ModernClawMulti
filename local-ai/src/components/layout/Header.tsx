@@ -9,6 +9,7 @@ const titles = {
   chat: 'Chat',
   memory: 'Memory',
   brain: 'Brain',
+  setup: 'Setup',
   settings: 'Settings',
 } as const;
 

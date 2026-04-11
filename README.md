@@ -2,7 +2,7 @@
 
 ModernClawMulti is the current multi-brain development lane for ModernClaw, a local-first desktop workspace for building, shaping, and operating persistent AI brains.
 
-This app combines chat, editable brain files, structured knowledge, curated imports, local model control, and voice into one system where different brains can live side by side without sharing conversations, memory, or preferences by accident.
+This app combines chat, editable brain files, structured knowledge, curated imports, local model control, setup-readiness checks, and voice into one system where different brains can live side by side without sharing conversations, memory, or preferences by accident.
 
 ## What ModernClawMulti Is
 
@@ -32,6 +32,11 @@ Validated today:
 - maintain separate conversations, memory, knowledge, and curator state per brain
 - persist a preferred model per brain
 - persist voice preferences per brain on top of shared machine-level Piper and Whisper installs
+- show setup readiness in onboarding, Settings, and chat attention banners
+- classify setup checks into required vs optional items
+- attach or drag-drop images into chat prompts
+- render saved image attachments inside conversation history
+- store image attachments as workspace files instead of SQLite blobs
 - normalize assistant text before text-to-speech playback so spoken replies sound more natural
 
 Current live role split:
@@ -47,6 +52,9 @@ Current behavior:
 - brain-scoped conversations
 - latest conversation restore on switch
 - isolated streaming responses
+- drag-drop or picker-based image attachments
+- image previews before send
+- saved image rendering inside message bubbles
 - read-aloud support for assistant replies
 
 ### Memory
@@ -78,6 +86,18 @@ Current behavior:
 - brain-level model and voice preferences
 - storage visibility
 - voice testing and readiness checks
+- shared setup-readiness checklist with refresh and open-folder actions
+
+## Setup And Readiness
+
+ModernClawMulti now has one reusable readiness layer shared across the app.
+
+Current behavior:
+- onboarding finish screen shows readiness state
+- Settings shows the same readiness checklist
+- chat shows an attention banner when required setup is incomplete
+- required setup currently covers Ollama, installed model availability, and workspace files
+- voice input and output are treated as optional features instead of hard blockers
 
 ## Core Brain Model
 
@@ -144,6 +164,17 @@ Current live example:
 - Rosie uses `Amy (Female)`
 - Joe uses `Joe (Male)`
 
+## Multimodal Status
+
+Current multimodal build state:
+- image understanding is now wired through the app
+- image files are copied into the active brain workspace under `attachments/`
+- the UI stores attachment metadata and file paths, not image blobs in SQLite
+- image files are base64-encoded only at request time before they are sent to Ollama
+
+Next planned multimodal slice:
+- audio-note understanding through Whisper transcription, then transcript-plus-attachment routing through the same pipeline
+
 ## Product Truths That Matter
 
 The current app is built around these rules:
@@ -187,6 +218,7 @@ Current limits include:
 - broader wizard-driven brain creation is not built yet
 - support-brain entry points are not fully productized yet
 - deeper phase-4 validation is still ongoing in less-traveled surfaces
+- audio-note attachments are not yet wired into the multimodal pipeline
 
 ## Technology Stack
 
@@ -208,11 +240,19 @@ Core stack:
 - `KNOWLEDGE_PACK_MODERNCLAW/`: compiled runtime-oriented knowledge pack
 - `CURATOR_REQUESTS/`: helper/reference folder for curator request-form work, not the live runtime inbox
 - `CURATOR_STAGED/`: helper/reference folder for staged-package work, not the live runtime inbox
+- `CURATOR_TASKS/`: rebuild reference copies of Cowork curator task prompts and the request form template
 - `MULTI_BRAIN_IMPLEMENTATION_PLAN.md`: implementation roadmap
 - `MULTI_BRAIN_STATUS.md`: current truth and validation status
 - `MULTI_BRAIN_TEST_PLAN.md`: testing notes
 - `JOE_SUPPORT_BRAIN_BLUEPRINT.md`: support-brain runtime blueprint
 - `ROSIE_PRODUCT_ARCHITECT_BLUEPRINT.md`: architect-brain runtime blueprint
+
+## Curator System Documentation
+
+Two documents cover the external Curator automation layer:
+
+- `CURATOR-SYSTEM-CONFIG.md` — live operational config: folder paths, mounted drives, task IDs, agent routing, replication checklist
+- `NOTEBOOKLM-CURATOR-WORKFLOW.md` — pipeline architecture, build state, risks, and recommended build order
 
 ## Requirements
 
@@ -252,6 +292,7 @@ Required Piper files for the approved voice pair:
 The current priority is to finish stabilizing the multi-brain foundation so future layers are built on trustworthy product truths.
 
 Near-future layers:
+- audio-note MVP on top of the new attachment pipeline
 - support-brain productization
 - guided wizard system for building custom brains
 - stronger onboarding for non-technical users

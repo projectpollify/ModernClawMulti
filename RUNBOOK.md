@@ -84,6 +84,8 @@ Working now:
 - local voice input through Whisper
 - pause / resume / stop playback controls
 - brain-specific Piper voice choice layered on top of a shared machine-level install
+- shared setup-readiness checks surfaced in onboarding, Settings, and chat
+- image attachments for multimodal prompts
 
 ### Current Default Voice Tool Layout
 
@@ -121,9 +123,22 @@ Current approved Piper voice presets in the app:
 
 Validated live:
 - Rosie uses `Amy (Female)`
-- Mia uses `Joe (Male)`
+- Joe uses `Joe (Male)`
 - both brains share the same machine-level Piper install
 - model and voice selection persist when switching brains
+
+## Setup And Image Notes
+
+Current setup-readiness behavior:
+- onboarding finish screen shows the shared setup checklist
+- Settings shows the same checklist with refresh and open-folder actions
+- chat shows an attention banner when required setup is incomplete
+
+Current image behavior:
+- image files can be attached from the picker or drag-dropped into chat
+- images are copied into the active brain workspace under `attachments/<conversation-id>/`
+- conversation history stores attachment metadata and local file paths
+- the Ollama request reads those files and base64-encodes them only when sending
 
 ## Brain / Curator Notes
 

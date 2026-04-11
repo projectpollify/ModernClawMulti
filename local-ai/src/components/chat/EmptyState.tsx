@@ -11,8 +11,8 @@ export function EmptyState() {
       </div>
       <h2 className="mb-2 text-xl font-semibold">{brainName} is ready for a first conversation</h2>
       <p className="max-w-md text-muted-foreground">
-        Send a message to start chatting with {brainName}. If you expected an older conversation here,
-        switch brains from the header and ModernClawMulti will reopen the latest chat for that brain.
+        Send a message or drop in an image to start chatting with {brainName}. If you expected an older conversation
+        here, switch brains from the header and ModernClawMulti will reopen the latest chat for that brain.
       </p>
     </div>
   );
