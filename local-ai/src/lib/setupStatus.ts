@@ -1,9 +1,11 @@
+import { APP_DISPLAY_NAME, IS_DIRECT_ENGINE_PROVIDER, MODEL_PROVIDER_NAME } from '@/lib/providerConfig';
 import type { MemoryFile } from '@/services/memory';
 import type { Model, OllamaStatus } from '@/services/ollama';
 import type { AppSettings } from '@/types/settings';
 import type { VoiceInputStatus, VoiceOutputStatus } from '@/types/voice';
 
 export type SetupItemState = 'ready' | 'attention' | 'checking' | 'optional';
+export type SetupNextStepId = 'checking' | 'ollama' | 'model' | 'memory' | 'ready';
 
 export interface SetupChecklistItem {
   id: string;
@@ -19,6 +21,12 @@ export interface SetupChecklistSummary {
   requiredTotal: number;
   optionalReady: number;
   optionalTotal: number;
+}
+
+export interface SetupNextStep {
+  id: SetupNextStepId;
+  title: string;
+  detail: string;
 }
 
 interface BuildSetupChecklistArgs {
@@ -57,7 +65,12 @@ export function buildSetupChecklist({
   isCheckingOutput,
   isCheckingInput,
   voiceError,
-}: BuildSetupChecklistArgs): { requiredItems: SetupChecklistItem[]; optionalItems: SetupChecklistItem[]; summary: SetupChecklistSummary } {
+}: BuildSetupChecklistArgs): {
+  requiredItems: SetupChecklistItem[];
+  optionalItems: SetupChecklistItem[];
+  summary: SetupChecklistSummary;
+  nextStep: SetupNextStep;
+} {
   const missingFiles = [
     !soul?.exists ? 'SOUL.md' : null,
     !user?.exists ? 'USER.md' : null,
@@ -82,10 +95,86 @@ export function buildSetupChecklist({
     optionalTotal: optionalItems.length,
   };
 
+  const nextStep = buildNextStep({
+    ollamaStatus,
+    models,
+    memoryBasePath,
+    missingFiles,
+    memoryLoading,
+    summary,
+  });
+
   return {
     requiredItems,
     optionalItems,
     summary,
+    nextStep,
+  };
+}
+
+function buildNextStep({
+  ollamaStatus,
+  models,
+  memoryBasePath,
+  missingFiles,
+  memoryLoading,
+  summary,
+}: {
+  ollamaStatus: OllamaStatus | null;
+  models: Model[];
+  memoryBasePath: string | null;
+  missingFiles: string[];
+  memoryLoading: boolean;
+  summary: SetupChecklistSummary;
+}): SetupNextStep {
+  if (!ollamaStatus || (memoryLoading && !memoryBasePath)) {
+    return {
+      id: 'checking',
+      title: 'Checking this machine',
+      detail: `${APP_DISPLAY_NAME} is still confirming local services and workspace files.`,
+    };
+  }
+
+  if (!ollamaStatus.running) {
+    return {
+      id: 'ollama',
+      title: IS_DIRECT_ENGINE_PROVIDER ? 'Get the direct engine serving first' : 'Get Ollama running first',
+      detail: IS_DIRECT_ENGINE_PROVIDER
+        ? `Start the local llama.cpp server on port 8080 so ${APP_DISPLAY_NAME} can reach the model service.`
+        : `Install Ollama if needed, then start it so ${APP_DISPLAY_NAME} can reach the local model service.`,
+    };
+  }
+
+  if (models.length === 0) {
+    return {
+      id: 'model',
+      title: IS_DIRECT_ENGINE_PROVIDER ? 'Expose the recommended model' : 'Install the recommended model',
+      detail: IS_DIRECT_ENGINE_PROVIDER
+        ? 'Once the direct engine is serving, expose a Gemma 4 model there so chat is ready right away.'
+        : 'Once Ollama is up, download a supported Gemma 4 model so chat is ready right away.',
+    };
+  }
+
+  if (!memoryBasePath || missingFiles.length > 0) {
+    return {
+      id: 'memory',
+      title: 'Initialize the workspace files',
+      detail: 'Create SOUL.md, USER.md, and MEMORY.md so the base workspace is ready for first use.',
+    };
+  }
+
+  if (summary.requiredReady === summary.requiredTotal) {
+    return {
+      id: 'ready',
+      title: 'Core setup is ready',
+      detail: 'You can start chatting now. Voice features can wait until later if you want to keep setup simple.',
+    };
+  }
+
+  return {
+    id: 'checking',
+    title: 'Refreshing setup state',
+    detail: `${APP_DISPLAY_NAME} is reconciling the current machine state.`,
   };
 }
 
@@ -93,8 +182,10 @@ function buildOllamaItem(ollamaStatus: OllamaStatus | null, modelError: string |
   if (!ollamaStatus) {
     return {
       id: 'ollama',
-      label: 'Ollama',
-      detail: 'Checking whether Ollama is available on this machine.',
+      label: MODEL_PROVIDER_NAME,
+      detail: IS_DIRECT_ENGINE_PROVIDER
+        ? 'Checking whether the direct engine is serving on port 8080.'
+        : 'Checking whether Ollama is available on this machine.',
       state: 'checking',
     };
   }
@@ -102,7 +193,7 @@ function buildOllamaItem(ollamaStatus: OllamaStatus | null, modelError: string |
   if (ollamaStatus.running) {
     return {
       id: 'ollama',
-      label: 'Ollama',
+      label: MODEL_PROVIDER_NAME,
       detail: ollamaStatus.version
         ? `Running and ready. Detected version ${ollamaStatus.version}.`
         : 'Running and ready for local model requests.',
@@ -112,10 +203,18 @@ function buildOllamaItem(ollamaStatus: OllamaStatus | null, modelError: string |
 
   return {
     id: 'ollama',
-    label: 'Ollama',
-    detail: 'ModernClaw needs Ollama running locally before chat can work.',
+    label: MODEL_PROVIDER_NAME,
+    detail: IS_DIRECT_ENGINE_PROVIDER
+      ? `${APP_DISPLAY_NAME} needs a local llama.cpp server on port 8080 before chat can work.`
+      : `${APP_DISPLAY_NAME} needs Ollama running locally before chat can work.`,
     state: 'attention',
-    notes: [ollamaStatus.error ?? modelError ?? 'Install and start Ollama, then refresh setup checks.'],
+    notes: [
+      ollamaStatus.error ??
+        modelError ??
+        (IS_DIRECT_ENGINE_PROVIDER
+          ? 'Start the local llama.cpp server on port 8080, then refresh setup checks.'
+          : 'Install and start Ollama, then refresh setup checks.'),
+    ],
   };
 }
 
@@ -133,7 +232,9 @@ function buildModelItem(ollamaStatus: OllamaStatus | null, models: Model[], mode
     return {
       id: 'model',
       label: 'Model Installed',
-      detail: 'Start Ollama before checking or downloading local models.',
+      detail: IS_DIRECT_ENGINE_PROVIDER
+        ? 'Start the direct engine server before checking which models are exposed there.'
+        : 'Start Ollama before checking or downloading local models.',
       state: 'attention',
     };
   }
@@ -153,9 +254,17 @@ function buildModelItem(ollamaStatus: OllamaStatus | null, models: Model[], mode
   return {
     id: 'model',
     label: 'Model Installed',
-    detail: 'Install at least one supported model before first chat.',
+    detail: IS_DIRECT_ENGINE_PROVIDER
+      ? 'Expose at least one Gemma 4 model through the direct engine before first chat.'
+      : 'Install at least one supported model before first chat.',
     state: 'attention',
-    notes: modelError ? [modelError] : ['Use onboarding or Settings to download a supported Gemma 4 model.'],
+    notes: modelError
+      ? [modelError]
+      : [
+          IS_DIRECT_ENGINE_PROVIDER
+            ? 'Run llama.cpp with a supported Gemma 4 model, then refresh setup.'
+            : 'Use onboarding or Settings to download a supported Gemma 4 model.',
+        ],
   };
 }
 
@@ -192,7 +301,7 @@ function buildMemoryItem(
   return {
     id: 'memory',
     label: 'Workspace Files',
-    detail: 'ModernClaw needs SOUL.md, USER.md, and MEMORY.md in the active workspace.',
+    detail: `${APP_DISPLAY_NAME} needs SOUL.md, USER.md, and MEMORY.md in the active workspace.`,
     state: 'attention',
     notes,
   };

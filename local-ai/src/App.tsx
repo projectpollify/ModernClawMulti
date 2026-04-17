@@ -5,8 +5,10 @@ import { MemoryView } from '@/components/memory/MemoryView';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { SetupView } from '@/components/setup/SetupView';
 import { SettingsView } from '@/components/settings/SettingsView';
+import { IS_DIRECT_ENGINE_PROVIDER, resolvePreferredModelName } from '@/lib/providerConfig';
+import { setupApi } from '@/services/setup';
 import { useTheme } from '@/hooks/useTheme';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAgentStore } from '@/stores/agentStore';
 import { useChatStore } from '@/stores/chatStore';
 import { useConversationStore } from '@/stores/conversationStore';
@@ -29,6 +31,8 @@ function App() {
   const clearConversations = useConversationStore((state) => state.clearConversations);
   const initializeMemory = useMemoryStore((state) => state.initialize);
   const currentModel = useModelStore((state) => state.currentModel);
+  const availableModels = useModelStore((state) => state.models);
+  const checkModelStatus = useModelStore((state) => state.checkStatus);
   const setCurrentModel = useModelStore((state) => state.setCurrentModel);
   const setChatModel = useChatStore((state) => state.setModel);
   const loadSettings = useSettingsStore((state) => state.loadSettings);
@@ -40,11 +44,69 @@ function App() {
 
   const activeAgentId = activeAgent?.agentId ?? null;
   const activeAgentDefaultModel = activeAgent?.defaultModel ?? null;
+  const directEngineBootstrapKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     void loadSettings();
     void loadAgents();
   }, [loadAgents, loadSettings]);
+
+  useEffect(() => {
+    if (!hasLoadedSettings) {
+      return;
+    }
+
+    const configuredModelPath = settings.directEngineModelPath.trim();
+    const bootstrapKey = `${settings.directEngineExecutablePath.trim()}::${configuredModelPath}`;
+
+    if (!IS_DIRECT_ENGINE_PROVIDER) {
+      void checkModelStatus();
+      return;
+    }
+
+    if (!configuredModelPath) {
+      directEngineBootstrapKeyRef.current = null;
+      void checkModelStatus();
+      return;
+    }
+
+    if (directEngineBootstrapKeyRef.current === bootstrapKey) {
+      return;
+    }
+
+    directEngineBootstrapKeyRef.current = bootstrapKey;
+
+    let cancelled = false;
+
+    const ensureDirectEngineReady = async () => {
+      await checkModelStatus();
+
+      if (cancelled || useModelStore.getState().ollamaStatus?.running) {
+        return;
+      }
+
+      try {
+        await setupApi.startOllama();
+      } catch (error) {
+        console.warn('Direct engine auto-start failed during app boot.', error);
+      }
+
+      if (!cancelled) {
+        await checkModelStatus();
+      }
+    };
+
+    void ensureDirectEngineReady();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    checkModelStatus,
+    hasLoadedSettings,
+    settings.directEngineExecutablePath,
+    settings.directEngineModelPath,
+  ]);
 
   useEffect(() => {
     if (!hasLoadedSettings) {
@@ -88,10 +150,16 @@ function App() {
       return;
     }
 
-    setCurrentModel(activeAgentDefaultModel ?? settings.defaultModel ?? null);
+    setCurrentModel(
+      resolvePreferredModelName(
+        activeAgentDefaultModel ?? settings.defaultModel ?? null,
+        availableModels.map((model) => model.name)
+      )
+    );
   }, [
     activeAgentDefaultModel,
     activeAgentId,
+    availableModels,
     hasLoadedAgents,
     hasLoadedSettings,
     setCurrentModel,

@@ -60,6 +60,10 @@ pub struct ChatResponse {
     pub total_duration: Option<u64>,
     #[serde(default)]
     pub eval_count: Option<u32>,
+    #[serde(default)]
+    pub prompt_eval_count: Option<u32>,
+    #[serde(default)]
+    pub finish_reason: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -67,6 +71,21 @@ pub struct OllamaStatus {
     pub running: bool,
     pub version: Option<String>,
     pub error: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OllamaPullProgress {
+    #[serde(default)]
+    pub model: String,
+    pub status: String,
+    #[serde(default)]
+    pub digest: Option<String>,
+    #[serde(default)]
+    pub total: Option<u64>,
+    #[serde(default)]
+    pub completed: Option<u64>,
+    #[serde(default)]
+    pub done: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -109,6 +128,7 @@ pub struct Message {
     pub attachments: Vec<MessageAttachment>,
     pub tokens_used: Option<i32>,
     pub feedback: Option<String>,
+    pub feedback_note: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 

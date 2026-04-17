@@ -1,5 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { ModelDownloadProgressCard } from '@/components/models/ModelDownloadProgressCard';
 import { Button } from '@/components/ui/Button';
+import { useSetupActions } from '@/hooks/useSetupActions';
+import {
+  APP_DISPLAY_NAME,
+  IS_DIRECT_ENGINE_PROVIDER,
+  MODEL_PROVIDER_NAME,
+  isRecommendedModelName,
+} from '@/lib/providerConfig';
 import { CURATED_FLOOR_MODELS, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { cn } from '@/lib/utils';
 import { useModelStore } from '@/stores/modelStore';
@@ -11,11 +19,21 @@ interface ModelStepProps {
 
 export function ModelStep({ onNext, onBack }: ModelStepProps) {
   const models = useModelStore((state) => state.models);
-  const downloadModel = useModelStore((state) => state.downloadModel);
   const downloadingModel = useModelStore((state) => state.downloadingModel);
+  const downloadProgress = useModelStore((state) => state.downloadProgress);
   const loadModels = useModelStore((state) => state.loadModels);
   const error = useModelStore((state) => state.error);
   const clearError = useModelStore((state) => state.clearError);
+  const {
+    installRecommendedModel,
+    isInstallingRecommendedModel,
+    actionError,
+    actionNotice,
+    clearActionError,
+    clearActionNotice,
+    openProviderApp,
+    isOpeningDownload,
+  } = useSetupActions();
   const [selectedModel, setSelectedModel] = useState(DEFAULT_FLOOR_MODEL);
 
   useEffect(() => {
@@ -24,28 +42,49 @@ export function ModelStep({ onNext, onBack }: ModelStepProps) {
 
   const hasModels = models.length > 0;
   const installedNames = useMemo(() => new Set(models.map((model) => model.name)), [models]);
+  const recommendedModelReady = useMemo(
+    () =>
+      IS_DIRECT_ENGINE_PROVIDER
+        ? models.some((model) => isRecommendedModelName(model.name))
+        : installedNames.has(DEFAULT_FLOOR_MODEL),
+    [installedNames, models]
+  );
 
   const handleDownload = async () => {
     clearError();
-    await downloadModel(selectedModel);
+    if (IS_DIRECT_ENGINE_PROVIDER || selectedModel === DEFAULT_FLOOR_MODEL) {
+      await installRecommendedModel();
+      return;
+    }
+
+    const modelStore = useModelStore.getState();
+    await modelStore.downloadModel(selectedModel);
     await loadModels();
   };
 
   return (
     <StepShell
       eyebrow="Step 2"
-      title="Choose a Model"
-      description="Install a supported Gemma 4 model so ModernClawMulti starts from a strong default lane, with a lighter sibling available if you want a smaller local footprint while testing multi-brain behavior."
+      title={IS_DIRECT_ENGINE_PROVIDER ? 'Load a Model' : 'Choose a Model'}
+      description={
+        IS_DIRECT_ENGINE_PROVIDER
+          ? `Start the ${MODEL_PROVIDER_NAME} local server, load a Gemma 4 model there, and ${APP_DISPLAY_NAME} will use that lane as the default Windows multi-brain engine.`
+          : `Install a supported Gemma 4 model so ${APP_DISPLAY_NAME} starts from a strong default lane, with a lighter sibling available if you want a smaller local footprint while testing multi-brain behavior.`
+      }
       onBack={onBack}
       onNext={onNext}
       nextDisabled={!hasModels}
       backLabel="Back"
-      nextLabel="Continue"
+      nextLabel={hasModels ? 'Continue to Workspace' : 'Continue'}
     >
       {hasModels ? (
         <div className="rounded-[28px] border border-green-500/25 bg-green-500/10 p-6">
-          <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">Installed Models Ready</h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{models.map((model) => model.name).join(', ')}</p>
+          <h3 className="text-lg font-semibold text-green-700 dark:text-green-300">
+            {IS_DIRECT_ENGINE_PROVIDER ? 'Loaded Models Ready' : 'Installed Models Ready'}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {models.map((model) => model.name).join(', ')}. The next step is confirming the workspace files.
+          </p>
         </div>
       ) : (
         <div className="grid gap-3">
@@ -74,9 +113,9 @@ export function ModelStep({ onNext, onBack }: ModelStepProps) {
                     {model.recommended ? (
                       <span className="rounded-full bg-primary/12 px-2 py-0.5 text-xs text-primary">Recommended</span>
                     ) : null}
-                    {installedNames.has(model.name) ? (
+                    {(IS_DIRECT_ENGINE_PROVIDER ? recommendedModelReady && model.recommended : installedNames.has(model.name)) ? (
                       <span className="rounded-full bg-green-500/12 px-2 py-0.5 text-xs text-green-700 dark:text-green-300">
-                        Installed
+                        {IS_DIRECT_ENGINE_PROVIDER ? 'Loaded' : 'Installed'}
                       </span>
                     ) : null}
                   </div>
@@ -95,10 +134,53 @@ export function ModelStep({ onNext, onBack }: ModelStepProps) {
         </div>
       ) : null}
 
+      {actionError ? (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600">
+          <span>{actionError}</span>
+          <Button variant="ghost" size="sm" onClick={clearActionError}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
+
+      {actionNotice ? (
+        <div
+          className={`mt-5 flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${
+            actionNotice.tone === 'success'
+              ? 'border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-300'
+              : 'border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300'
+          }`}
+        >
+          <span>{actionNotice.message}</span>
+          <Button variant="ghost" size="sm" onClick={clearActionNotice}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
+
+      {!IS_DIRECT_ENGINE_PROVIDER && !hasModels && downloadingModel && downloadProgress ? (
+        <ModelDownloadProgressCard progress={downloadProgress} className="mt-5" />
+      ) : null}
+
       {!hasModels ? (
-        <div className="mt-6 flex items-center justify-center">
-          <Button onClick={() => void handleDownload()} disabled={Boolean(downloadingModel)}>
-            {downloadingModel ? `Downloading ${downloadingModel}...` : `Download ${selectedModel}`}
+        <div className="mt-6 flex items-center justify-center gap-3">
+          {IS_DIRECT_ENGINE_PROVIDER ? (
+            <Button variant="outline" onClick={() => void openProviderApp()} disabled={isOpeningDownload}>
+              {isOpeningDownload ? 'Opening Engine Guide...' : 'Open Engine Guide'}
+            </Button>
+          ) : null}
+          <Button onClick={() => void handleDownload()} disabled={Boolean(downloadingModel) || isInstallingRecommendedModel}>
+            {isInstallingRecommendedModel
+              ? IS_DIRECT_ENGINE_PROVIDER
+                ? 'Checking Direct Engine...'
+                : 'Installing Recommended Model...'
+              : downloadingModel
+                ? `Downloading ${downloadingModel}...`
+                : IS_DIRECT_ENGINE_PROVIDER
+                  ? 'Confirm Gemma 4 In Engine'
+                  : selectedModel === DEFAULT_FLOOR_MODEL
+                    ? `Download ${DEFAULT_FLOOR_MODEL} (Recommended)`
+                    : `Download ${selectedModel}`}
           </Button>
         </div>
       ) : null}
@@ -148,4 +230,3 @@ function StepShell({
     </div>
   );
 }
-

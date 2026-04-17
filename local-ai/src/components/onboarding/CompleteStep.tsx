@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button';
 import { SetupStatusPanel } from '@/components/setup/SetupStatusPanel';
+import { APP_DISPLAY_NAME, IS_DIRECT_ENGINE_PROVIDER, MODEL_PROVIDER_NAME } from '@/lib/providerConfig';
 import { useViewStore } from '@/stores/uiStore';
 
 export function CompleteStep({ onFinish }: { onFinish: () => void }) {
@@ -18,8 +19,9 @@ export function CompleteStep({ onFinish }: { onFinish: () => void }) {
 
       <h2 className="text-3xl font-semibold tracking-tight">You&apos;re Ready</h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
-        ModernClaw is set up and ready to chat. You can refine personality in Memory, switch models in Settings, and
-        keep everything local.
+        {IS_DIRECT_ENGINE_PROVIDER
+          ? `${APP_DISPLAY_NAME} is set up and ready to chat through ${MODEL_PROVIDER_NAME}. You can refine personality in Memory, switch loaded models in Settings, and keep everything local.`
+          : `${APP_DISPLAY_NAME} is set up and ready to chat. You can refine personality in Memory, switch models in Settings, and keep everything local.`}
       </p>
 
       <div className="mx-auto mt-8 max-w-4xl text-left">
@@ -35,7 +37,11 @@ export function CompleteStep({ onFinish }: { onFinish: () => void }) {
           <li>Edit SOUL.md to shape the assistant.</li>
           <li>Add household details to USER.md.</li>
           <li>Use Memory to keep durable notes and plans.</li>
-          <li>Use Settings to manage models and prompt budget.</li>
+          <li>
+            {IS_DIRECT_ENGINE_PROVIDER
+              ? 'Use Settings to switch between your local direct-engine model lanes.'
+              : 'Use Settings to manage models and prompt budget.'}
+          </li>
         </ul>
       </div>
 

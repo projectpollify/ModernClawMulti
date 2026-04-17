@@ -1,5 +1,6 @@
 import { ModelCard } from './ModelCard';
 import { ModelDownloader } from './ModelDownloader';
+import { APP_DISPLAY_NAME, IS_DIRECT_ENGINE_PROVIDER, MODEL_PROVIDER_NAME } from '@/lib/providerConfig';
 import { useModelStore } from '@/stores/modelStore';
 
 export function ModelList() {
@@ -17,7 +18,9 @@ export function ModelList() {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Model Management</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Choose the active model, download new ones, and prune what you do not need.
+              {IS_DIRECT_ENGINE_PROVIDER
+                ? `Choose the active model currently exposed by ${MODEL_PROVIDER_NAME} for ${APP_DISPLAY_NAME}.`
+                : 'Choose the active model, download new ones, and prune what you do not need.'}
             </p>
           </div>
           <button
@@ -30,7 +33,9 @@ export function ModelList() {
 
         {!ollamaStatus?.running ? (
           <div className="mb-6 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700">
-            Ollama is not running. Start Ollama to manage local models.
+            {IS_DIRECT_ENGINE_PROVIDER
+              ? 'The direct engine is not serving on port 8080. Start llama.cpp and expose a model there, then refresh.'
+              : 'Ollama is not running. Start Ollama to manage local models.'}
           </div>
         ) : null}
 
@@ -45,7 +50,7 @@ export function ModelList() {
 
         <section className="mb-8 rounded-3xl border border-border bg-background/70 p-5 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Download
+            {IS_DIRECT_ENGINE_PROVIDER ? 'Direct Engine Setup' : 'Download'}
           </h3>
           <ModelDownloader />
         </section>
@@ -53,7 +58,7 @@ export function ModelList() {
         <section className="rounded-3xl border border-border bg-background/70 p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Installed Models
+              {IS_DIRECT_ENGINE_PROVIDER ? 'Available Models' : 'Installed Models'}
             </h3>
             <span className="text-sm text-muted-foreground">{models.length}</span>
           </div>
@@ -62,7 +67,9 @@ export function ModelList() {
             <p className="text-sm text-muted-foreground">Loading models...</p>
           ) : models.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No models installed yet. Download one above to get started.
+              {IS_DIRECT_ENGINE_PROVIDER
+                ? 'No models are currently exposed by the direct engine. Start llama.cpp with a model to get started.'
+                : 'No models installed yet. Download one above to get started.'}
             </p>
           ) : (
             <div className="grid gap-4">

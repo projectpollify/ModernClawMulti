@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/Button';
+import { APP_DISPLAY_NAME } from '@/lib/providerConfig';
+import { memoryApi } from '@/services/memory';
 import { useMemoryStore } from '@/stores/memoryStore';
 
 interface MemoryStepProps {
@@ -15,6 +17,15 @@ export function MemoryStep({ onNext, onBack }: MemoryStepProps) {
   const basePath = useMemoryStore((state) => state.basePath);
   const isLoading = useMemoryStore((state) => state.isLoading);
   const error = useMemoryStore((state) => state.error);
+  const isReady = Boolean(basePath && soul?.exists && user?.exists && memory?.exists && !error);
+
+  const handleOpenFolder = async () => {
+    try {
+      await memoryApi.openFolder();
+    } catch {
+      window.alert(`Unable to open the workspace folder.\n\n${basePath ?? 'Path unavailable'}`);
+    }
+  };
 
   useEffect(() => {
     void initialize();
@@ -47,7 +58,8 @@ export function MemoryStep({ onNext, onBack }: MemoryStepProps) {
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Step 3</p>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight">Initialize Memory</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-          ModernClaw creates plain Markdown files so you can inspect, edit, and control what the assistant remembers.
+          {APP_DISPLAY_NAME} creates plain Markdown files so you can inspect, edit, and control what the assistant
+          remembers.
         </p>
       </div>
 
@@ -73,6 +85,15 @@ export function MemoryStep({ onNext, onBack }: MemoryStepProps) {
             {basePath ? (
               <p className="mt-5 text-xs text-muted-foreground">Stored at: {basePath}</p>
             ) : null}
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button variant="outline" onClick={() => void initialize()} disabled={isLoading}>
+                {isLoading ? 'Refreshing...' : 'Refresh Files'}
+              </Button>
+              <Button variant="outline" onClick={() => void handleOpenFolder()} disabled={!basePath}>
+                Open Workspace Folder
+              </Button>
+            </div>
           </>
         )}
 
@@ -81,13 +102,20 @@ export function MemoryStep({ onNext, onBack }: MemoryStepProps) {
             {error}
           </div>
         ) : null}
+
+        {!isLoading && !isReady ? (
+          <div className="mt-5 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+            Finish creating the workspace files above before continuing. Once SOUL.md, USER.md, and MEMORY.md all show
+            Ready, this step is complete.
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-8 flex items-center justify-between">
         <Button variant="ghost" onClick={onBack}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={isLoading}>
+        <Button onClick={onNext} disabled={isLoading || !isReady}>
           Continue
         </Button>
       </div>

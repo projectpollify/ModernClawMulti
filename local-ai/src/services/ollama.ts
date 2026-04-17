@@ -27,12 +27,23 @@ export interface ChatResponse {
   done: boolean;
   total_duration?: number;
   eval_count?: number;
+  prompt_eval_count?: number;
+  finish_reason?: string;
 }
 
 export interface OllamaStatus {
   running: boolean;
   version?: string;
   error?: string;
+}
+
+export interface ModelPullProgress {
+  model: string;
+  status: string;
+  digest?: string;
+  total?: number;
+  completed?: number;
+  done: boolean;
 }
 
 export const ollamaApi = {
@@ -61,8 +72,22 @@ export const ollamaApi = {
     }
   },
 
-  async pullModel(name: string): Promise<void> {
-    return invoke('pull_model', { name });
+  async pullModel(name: string, onProgress?: (progress: ModelPullProgress) => void): Promise<void> {
+    const unlisten = onProgress
+      ? await listen<ModelPullProgress>('model-pull-progress', (event) => {
+          if (event.payload.model === name) {
+            onProgress(event.payload);
+          }
+        })
+      : null;
+
+    try {
+      return await invoke('pull_model', { name });
+    } finally {
+      if (unlisten) {
+        unlisten();
+      }
+    }
   },
 
   async deleteModel(name: string): Promise<void> {

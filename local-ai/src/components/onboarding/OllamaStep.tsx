@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { APP_DISPLAY_NAME, IS_DIRECT_ENGINE_PROVIDER, MODEL_PROVIDER_NAME, MODEL_PROVIDER_STATUS_URL } from '@/lib/providerConfig';
+import { useSetupActions } from '@/hooks/useSetupActions';
 import { useModelStore } from '@/stores/modelStore';
 
 interface OllamaStepProps {
@@ -10,6 +12,16 @@ interface OllamaStepProps {
 export function OllamaStep({ onNext, onBack }: OllamaStepProps) {
   const ollamaStatus = useModelStore((state) => state.ollamaStatus);
   const checkStatus = useModelStore((state) => state.checkStatus);
+  const {
+    openProviderApp,
+    startOllama,
+    isOpeningDownload,
+    isStartingOllama,
+    actionError,
+    actionNotice,
+    clearActionError,
+    clearActionNotice,
+  } = useSetupActions();
   const [isChecking, setIsChecking] = useState(true);
 
   const runCheck = async () => {
@@ -30,54 +42,122 @@ export function OllamaStep({ onNext, onBack }: OllamaStepProps) {
   return (
     <StepShell
       eyebrow="Step 1"
-      title="Check Ollama"
-      description="ModernClaw talks to Ollama on your machine to run the model layer."
+      title={IS_DIRECT_ENGINE_PROVIDER ? 'Check Direct Engine' : 'Check Ollama'}
+      description={
+        IS_DIRECT_ENGINE_PROVIDER
+          ? `${APP_DISPLAY_NAME} talks to a local llama.cpp engine on your machine to run the model layer.`
+          : `${APP_DISPLAY_NAME} talks to Ollama on your machine to run the model layer.`
+      }
       backLabel="Back"
-      nextLabel="Continue"
+      nextLabel={isRunning ? 'Continue to Model' : 'Continue'}
       onBack={onBack}
       onNext={onNext}
       nextDisabled={!isRunning}
     >
       {isChecking ? (
-        <StatusCard tone="neutral" title="Checking for Ollama..." description="Looking for a running Ollama instance on localhost:11434." />
+        <StatusCard
+          tone="neutral"
+          title={IS_DIRECT_ENGINE_PROVIDER ? 'Checking for Direct Engine...' : 'Checking for Ollama...'}
+          description={`Looking for a running ${MODEL_PROVIDER_NAME} instance at ${MODEL_PROVIDER_STATUS_URL}.`}
+        />
       ) : isRunning ? (
         <StatusCard
           tone="success"
-          title="Ollama is running"
-          description={ollamaStatus?.version ? `Version detected: ${ollamaStatus.version}` : 'You are ready for the next step.'}
+          title={`${MODEL_PROVIDER_NAME} is running`}
+          description={
+            ollamaStatus?.version
+              ? `Version detected: ${ollamaStatus.version}. The next step is ${
+                  IS_DIRECT_ENGINE_PROVIDER ? 'confirming a Gemma 4 model in the direct engine.' : 'installing the recommended model.'
+                }`
+              : IS_DIRECT_ENGINE_PROVIDER
+                ? 'You are ready to confirm the recommended model in the direct engine next.'
+                : 'You are ready to install the recommended model next.'
+          }
         />
       ) : (
         <StatusCard
           tone="warning"
-          title="Ollama not detected"
-          description="Install and start Ollama, then check again. ModernClaw depends on it for model execution."
+          title={IS_DIRECT_ENGINE_PROVIDER ? 'Direct Engine not detected' : 'Ollama not detected'}
+          description={
+            IS_DIRECT_ENGINE_PROVIDER
+              ? 'Start the local llama.cpp engine on port 8080 with a Gemma 4 model, then check again.'
+              : `Install and start Ollama, then check again. ${APP_DISPLAY_NAME} depends on it for model execution.`
+          }
         >
           <div className="mt-5 rounded-2xl bg-background/60 p-4 text-left text-sm leading-7 text-muted-foreground">
             <ol className="list-decimal space-y-1 pl-5">
-              <li>
-                Install Ollama from{' '}
-                <a
-                  href="https://ollama.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  ollama.com
-                </a>
-                .
-              </li>
-              <li>Start Ollama on this machine.</li>
-              <li>Come back and click Check Again.</li>
+              {IS_DIRECT_ENGINE_PROVIDER ? (
+                <>
+                  <li>Set your `llama-server.exe` path in Settings if it is not already in PATH.</li>
+                  <li>Set a GGUF model path in Settings, or switch to a discovered local GGUF later.</li>
+                  <li>Click Start Engine, then come back and click Check Again.</li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    Install Ollama from{' '}
+                    <a
+                      href="https://ollama.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      ollama.com
+                    </a>
+                    .
+                  </li>
+                  <li>Start Ollama on this machine.</li>
+                  <li>Come back and click Check Again.</li>
+                </>
+              )}
             </ol>
           </div>
 
           <div className="mt-6">
-            <Button variant="outline" onClick={() => void runCheck()}>
-              Check Again
-            </Button>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button variant="outline" onClick={() => void openProviderApp()} disabled={isOpeningDownload}>
+                {isOpeningDownload ? 'Opening...' : IS_DIRECT_ENGINE_PROVIDER ? 'Open Engine Guide' : 'Download Ollama'}
+              </Button>
+              <Button variant="outline" onClick={() => void startOllama()} disabled={isStartingOllama}>
+                {isStartingOllama
+                  ? IS_DIRECT_ENGINE_PROVIDER
+                    ? 'Starting Engine...'
+                    : 'Starting Ollama...'
+                  : IS_DIRECT_ENGINE_PROVIDER
+                    ? 'Start Engine'
+                    : 'Start Ollama'}
+              </Button>
+              <Button variant="outline" onClick={() => void runCheck()}>
+                Check Again
+              </Button>
+            </div>
           </div>
         </StatusCard>
       )}
+
+      {actionError ? (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600">
+          <span>{actionError}</span>
+          <Button variant="ghost" size="sm" onClick={clearActionError}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
+
+      {actionNotice ? (
+        <div
+          className={`mt-5 flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${
+            actionNotice.tone === 'success'
+              ? 'border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-300'
+              : 'border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300'
+          }`}
+        >
+          <span>{actionNotice.message}</span>
+          <Button variant="ghost" size="sm" onClick={clearActionNotice}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
     </StepShell>
   );
 }
@@ -152,5 +232,3 @@ function StatusCard({
     </div>
   );
 }
-
-

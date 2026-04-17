@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { ModelDownloadProgressCard } from '@/components/models/ModelDownloadProgressCard';
+import { APP_DISPLAY_NAME, IS_DIRECT_ENGINE_PROVIDER } from '@/lib/providerConfig';
 import { CURATED_FLOOR_MODELS } from '@/lib/voiceCatalog';
 import { cn } from '@/lib/utils';
 import { useModelStore } from '@/stores/modelStore';
@@ -7,15 +9,39 @@ export function ModelDownloader() {
   const [customModel, setCustomModel] = useState('');
   const downloadModel = useModelStore((state) => state.downloadModel);
   const downloadingModel = useModelStore((state) => state.downloadingModel);
+  const downloadProgress = useModelStore((state) => state.downloadProgress);
 
   const handleDownload = (name: string) => {
     void downloadModel(name);
   };
 
+  if (IS_DIRECT_ENGINE_PROVIDER) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-border bg-background/70 p-4 text-sm text-muted-foreground">
+          {APP_DISPLAY_NAME} reads whichever Gemma 4 GGUF models are available to the local direct engine. Start{' '}
+          <code>llama-server</code> on port 8080, make one of the standard lanes below available there, then come back
+          here to refresh.
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {CURATED_FLOOR_MODELS.map((model) => (
+            <div key={model.name} className="rounded-xl border border-border bg-background px-3 py-2 text-left text-sm">
+              <div className="font-medium">{model.name}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{model.description}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-background/70 p-4 text-sm text-muted-foreground">
-        ModernClawMulti is currently tuned around the Gemma 4 family. Start with the primary lane for the strongest multi-brain quality, or use the lighter 2B sibling when you want a smaller supported option on the same track.
+        {APP_DISPLAY_NAME} is currently tuned around the Gemma 4 family. Start with the primary lane for the
+        strongest multi-brain quality, or use the lighter 2B sibling when you want a smaller supported option on the
+        same track.
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -54,17 +80,7 @@ export function ModelDownloader() {
         </button>
       </div>
 
-      {downloadingModel ? (
-        <div className="rounded-xl bg-secondary p-3">
-          <p className="text-sm">
-            Downloading <span className="font-medium">{downloadingModel}</span>...
-          </p>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
-          </div>
-        </div>
-      ) : null}
+      {downloadingModel && downloadProgress ? <ModelDownloadProgressCard progress={downloadProgress} /> : null}
     </div>
   );
 }
-

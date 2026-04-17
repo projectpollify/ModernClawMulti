@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { ModelCard } from '@/components/models/ModelCard';
 import { ModelDownloader } from '@/components/models/ModelDownloader';
 import { SetupStatusPanel } from '@/components/setup/SetupStatusPanel';
+import { APP_DISPLAY_NAME, IS_DIRECT_ENGINE_PROVIDER, MODEL_PROVIDER_NAME } from '@/lib/providerConfig';
 import { CURATED_FLOOR_MODELS, CURATED_PIPER_VOICES, DEFAULT_FLOOR_MODEL } from '@/lib/voiceCatalog';
 import { getEffectiveVoiceSettings } from '@/lib/voiceSettings';
 import { getDefaultVoicePaths } from '@/lib/voicePaths';
@@ -16,6 +17,7 @@ import { useThemeStore } from '@/stores/themeStore';
 import { useVoiceStore } from '@/stores/voiceStore';
 import { historyApi } from '@/services/history';
 import { memoryApi } from '@/services/memory';
+import { setupApi } from '@/services/setup';
 import type { AgentVoiceSettings, MessageFeedbackSummary, Theme } from '@/types';
 
 const CONTEXT_WINDOW_OPTIONS = [2048, 4096, 8192, 16384, 32768];
@@ -34,7 +36,7 @@ export function SettingsView() {
   const activeAgent = useAgentStore((state) => state.activeAgent);
   const updateActiveAgentDefaultModel = useAgentStore((state) => state.updateActiveAgentDefaultModel);
   const updateActiveAgentVoiceSettings = useAgentStore((state) => state.updateActiveAgentVoiceSettings);
-  const { settings, isLoading, error, updateSetting, resetSettings, clearError } = useSettingsStore();
+  const { settings, isLoading, error, updateSetting, resetSettings, clearError, loadSettings } = useSettingsStore();
   const currentTheme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
   const models = useModelStore((state) => state.models);
@@ -168,10 +170,35 @@ export function SettingsView() {
     const previousModel = currentModel;
     const nextModel = value || null;
     setCurrentModel(nextModel);
+
     try {
+      if (IS_DIRECT_ENGINE_PROVIDER && nextModel) {
+        await setupApi.switchDirectEngineModel(nextModel);
+      }
+
       await updateActiveAgentDefaultModel(nextModel);
+      await loadSettings();
+      await refreshModels();
     } catch {
+      if (IS_DIRECT_ENGINE_PROVIDER && previousModel && nextModel && previousModel !== nextModel) {
+        try {
+          await setupApi.switchDirectEngineModel(previousModel);
+        } catch {
+          // Best effort rollback so the running engine matches the restored selection.
+        }
+      }
+
+      if (previousModel !== nextModel) {
+        try {
+          await updateActiveAgentDefaultModel(previousModel);
+        } catch {
+          // Ignore secondary rollback failure and fall back to a store refresh.
+        }
+      }
+
       setCurrentModel(previousModel);
+      await loadSettings();
+      await refreshModels();
     }
   };
 
@@ -227,7 +254,7 @@ export function SettingsView() {
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Configure appearance, model defaults, storage behavior, privacy, and voice for your ModernClaw workspace.
+              Configure appearance, model defaults, provider paths, storage behavior, privacy, and voice for your {APP_DISPLAY_NAME} workspace.
             </p>
           </div>
           <Button variant="outline" onClick={() => void refreshModels()}>
@@ -270,7 +297,7 @@ export function SettingsView() {
                 description="Choose the default model for this workspace. The header model picker and the model tools below update the same saved preference."
               >
                 <select
-                  value={activeAgent?.defaultModel ?? currentModel ?? ''}
+                  value={currentModel ?? activeAgent?.defaultModel ?? ''}
                   onChange={(event) => void handleWorkspaceModelChange(event.target.value)}
                   className="max-w-[320px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 >
@@ -298,6 +325,47 @@ export function SettingsView() {
                   ))}
                 </select>
               </SettingRow>
+
+              {IS_DIRECT_ENGINE_PROVIDER ? (
+                <>
+                  <SettingRow
+                    label="llama-server Executable"
+                    description={`Path to the local llama.cpp server binary. If left blank, ${APP_DISPLAY_NAME} will try common Windows locations first.`}
+                    stackOnMobile
+                  >
+                    <input
+                      type="text"
+                      value={settings.directEngineExecutablePath}
+                      onChange={(event) => void updateSetting('directEngineExecutablePath', event.target.value)}
+                      placeholder="C:\\path\\to\\llama-server.exe"
+                      className="w-full min-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </SettingRow>
+
+                  <SettingRow
+                    label="GGUF Model Path"
+                    description="Path to the GGUF model file the direct engine should serve when you click Start Engine."
+                    stackOnMobile
+                  >
+                    <input
+                      type="text"
+                      value={settings.directEngineModelPath}
+                      onChange={(event) => void updateSetting('directEngineModelPath', event.target.value)}
+                      placeholder="C:\\path\\to\\model.gguf"
+                      className="w-full min-w-[260px] rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </SettingRow>
+
+                  <SettingRow
+                    label="Engine Port"
+                    description="The current direct-engine prototype expects llama.cpp to serve its OpenAI-compatible API on port 8080."
+                  >
+                    <div className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
+                      http://127.0.0.1:8080
+                    </div>
+                  </SettingRow>
+                </>
+              ) : null}
             </SettingsSection>
 
             <SettingsSection title="Behavior">
@@ -328,6 +396,16 @@ export function SettingsView() {
                 <Toggle
                   checked={settings.showTokenCount}
                   onChange={(value) => void updateSetting('showTokenCount', value)}
+                />
+              </SettingRow>
+
+              <SettingRow
+                label="Show Response Metrics"
+                description="Display richer runtime metrics beneath assistant replies when the backend provides them."
+              >
+                <Toggle
+                  checked={settings.showResponseMetrics}
+                  onChange={(value) => void updateSetting('showResponseMetrics', value)}
                 />
               </SettingRow>
             </SettingsSection>
@@ -362,7 +440,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Piper Executable"
-                description="ModernClaw looks here first for the local Piper binary. This stays machine-level by default."
+                description={`${APP_DISPLAY_NAME} looks here first for the local Piper binary. This stays machine-level by default.`}
                 stackOnMobile
               >
                 <input
@@ -400,7 +478,7 @@ export function SettingsView() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => void speakMessage('voice-test', 'ModernClaw voice output is configured and ready to test.')}
+                    onClick={() => void speakMessage('voice-test', `${APP_DISPLAY_NAME} voice output is configured and ready to test.`)}
                     disabled={!effectiveVoiceSettings.enableVoiceOutput || isSpeakingVoice}
                   >
                     {isSpeakingVoice ? 'Speaking...' : 'Test Voice'}
@@ -435,7 +513,7 @@ export function SettingsView() {
 
               <SettingRow
                 label="Whisper Executable"
-                description="ModernClaw looks here first for whisper-cli.exe. This stays machine-level by default."
+                description={`${APP_DISPLAY_NAME} looks here first for whisper-cli.exe. This stays machine-level by default.`}
                 stackOnMobile
               >
                 <input
@@ -567,13 +645,15 @@ export function SettingsView() {
 
               {!ollamaStatus?.running ? (
                 <div className="mt-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700">
-                  Ollama is not running. Start it to manage installed models.
+                  {IS_DIRECT_ENGINE_PROVIDER
+                    ? `${MODEL_PROVIDER_NAME} is not serving on port 8080. Start the local engine and load a model there to manage active models.`
+                    : 'Ollama is not running. Start it to manage installed models.'}
                 </div>
               ) : null}
 
               <div className="mt-5 rounded-2xl border border-border bg-background/80 p-4">
                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Download
+                  {IS_DIRECT_ENGINE_PROVIDER ? 'Direct Engine Models' : 'Download'}
                 </h3>
                 <ModelDownloader />
               </div>
@@ -583,7 +663,7 @@ export function SettingsView() {
                   models.map((model) => <ModelCard key={model.name} model={model} />)
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border bg-background/70 p-5 text-sm text-muted-foreground">
-                    No models installed yet.
+                    {IS_DIRECT_ENGINE_PROVIDER ? 'No compatible local GGUF models are currently available.' : 'No models installed yet.'}
                   </div>
                 )}
               </div>
