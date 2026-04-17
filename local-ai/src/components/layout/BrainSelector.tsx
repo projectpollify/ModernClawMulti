@@ -169,8 +169,8 @@ export function BrainSelector() {
 
       <Button
         variant="outline"
-        size="sm"
-        className="rounded-xl"
+        size="md"
+        className="shrink-0 whitespace-nowrap rounded-2xl px-5"
         onClick={() => {
           setIsCreating((value) => !value);
           setLocalError(null);
@@ -182,8 +182,8 @@ export function BrainSelector() {
       {canDeleteActiveBrain ? (
         <Button
           variant="outline"
-          size="sm"
-          className="rounded-xl border-red-500/30 text-red-600 hover:bg-red-500/10 hover:text-red-600"
+          size="md"
+          className="shrink-0 whitespace-nowrap rounded-2xl border-red-500/30 px-5 text-red-600 hover:bg-red-500/10 hover:text-red-600"
           onClick={() => void handleDeleteBrain()}
           disabled={isDeleting || isLoading}
         >

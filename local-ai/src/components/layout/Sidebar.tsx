@@ -27,24 +27,21 @@ export function Sidebar() {
       <div
         className={cn(
           'flex h-16 items-center border-b border-border',
-          isOpen ? 'justify-start px-4' : 'justify-center px-2'
+          isOpen ? 'justify-center px-4' : 'justify-center px-2'
         )}
       >
         <button
           onClick={open}
           className={cn(
             'flex items-center gap-3 rounded-xl transition-colors',
-            isOpen ? 'cursor-default' : 'px-1 py-1 hover:bg-accent'
+            isOpen ? 'w-full justify-center cursor-default' : 'px-1 py-1 hover:bg-accent'
           )}
           disabled={isOpen}
           aria-label={isOpen ? 'Sidebar open' : 'Expand sidebar'}
           title={isOpen ? undefined : 'Expand sidebar'}
         >
           {isOpen ? (
-            <div className="flex items-center gap-2.5">
-              <img src={brandIcon} alt={APP_DISPLAY_NAME} className="h-8 w-8 shrink-0 object-contain" />
-              <img src={brandWordmark} alt={APP_DISPLAY_NAME} className="h-4 w-auto max-w-[144px] object-contain" />
-            </div>
+            <img src={brandWordmark} alt={APP_DISPLAY_NAME} className="h-5 w-auto max-w-[160px] object-contain" />
           ) : (
             <img src={brandIcon} alt={APP_DISPLAY_NAME} className="h-8 w-8 object-contain" />
           )}
