@@ -595,13 +595,15 @@ export function SettingsView() {
                 description="This is where SOUL.md, USER.md, MEMORY.md, logs, knowledge files, and the default voice tool folders live."
                 stackOnMobile
               >
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <code className="max-w-[320px] rounded-lg bg-secondary px-2.5 py-1.5 text-xs text-secondary-foreground">
+                <div className="w-full space-y-3 sm:max-w-[420px]">
+                  <code className="block w-full break-all rounded-xl bg-secondary px-3 py-2 text-xs text-secondary-foreground">
                     {settings.memoryPath || 'Default'}
                   </code>
-                  <Button variant="outline" size="sm" onClick={() => void openMemoryFolder()}>
-                    Open
-                  </Button>
+                  <div className="flex justify-start sm:justify-end">
+                    <Button variant="outline" size="sm" onClick={() => void openMemoryFolder()}>
+                      Open
+                    </Button>
+                  </div>
                 </div>
               </SettingRow>
             </SettingsSection>
@@ -705,14 +707,14 @@ function SettingRow({
     <div
       className={cn(
         'flex gap-4 border-b border-border/70 py-3 last:border-b-0 last:pb-0',
-        stackOnMobile ? 'flex-col sm:flex-row sm:items-center sm:justify-between' : 'items-center justify-between'
+        stackOnMobile ? 'flex-col sm:flex-row sm:items-start sm:justify-between' : 'items-center justify-between'
       )}
     >
       <div className="max-w-xl">
         <p className="text-sm font-medium">{label}</p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className={cn(stackOnMobile ? 'w-full sm:max-w-[420px]' : 'shrink-0')}>{children}</div>
     </div>
   );
 }

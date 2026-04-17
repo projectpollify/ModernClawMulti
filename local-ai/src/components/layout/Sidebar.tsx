@@ -41,7 +41,7 @@ export function Sidebar() {
           title={isOpen ? undefined : 'Expand sidebar'}
         >
           {isOpen ? (
-            <img src={brandWordmark} alt={APP_DISPLAY_NAME} className="h-5 w-auto max-w-[160px] object-contain" />
+            <img src={brandWordmark} alt={APP_DISPLAY_NAME} className="h-7 w-auto max-w-[200px] object-contain" />
           ) : (
             <img src={brandIcon} alt={APP_DISPLAY_NAME} className="h-8 w-8 object-contain" />
           )}
