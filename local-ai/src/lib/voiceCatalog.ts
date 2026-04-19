@@ -24,8 +24,8 @@ export const CURATED_PIPER_VOICES: CuratedVoiceOption[] = [
 
 export const DEFAULT_PIPER_VOICE_ID = 'amy-medium';
 export const DEFAULT_WHISPER_MODEL_FILENAME = 'ggml-base.en.bin';
-export const DEFAULT_FLOOR_MODEL = IS_DIRECT_ENGINE_PROVIDER ? 'google/gemma-4-e4b' : 'gemma4:e4b';
-export const LIGHTWEIGHT_FLOOR_MODEL = IS_DIRECT_ENGINE_PROVIDER ? 'google/gemma-4-e2b' : 'gemma4:e2b';
+export const DEFAULT_FLOOR_MODEL = IS_DIRECT_ENGINE_PROVIDER ? 'Thinking Model' : 'gemma4:e4b';
+export const LIGHTWEIGHT_FLOOR_MODEL = DEFAULT_FLOOR_MODEL;
 export const LEGACY_FLOOR_MODEL = 'nchapman/dolphin3.0-qwen2.5:3b';
 export const LEGACY_FALLBACK_MODEL = 'dolphin3:8b';
 

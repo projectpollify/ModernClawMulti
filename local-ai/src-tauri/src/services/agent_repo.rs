@@ -6,12 +6,13 @@ use crate::services::database::Database;
 use crate::types::Agent;
 
 pub const DEFAULT_AGENT_ID: &str = "default";
-pub const DEFAULT_AGENT_NAME: &str = "Rosie";
+pub const DEFAULT_AGENT_NAME: &str = "Joe Support";
 const DEFAULT_AGENT_DESCRIPTION: &str = "Baseline ModernClawMulti workspace running on the primary Gemma 4 lane";
-const DEFAULT_AGENT_MODEL: &str = "gemma4:e4b";
+const DEFAULT_AGENT_MODEL: &str = "Thinking Model";
 const DEFAULT_AGENT_PIPER_VOICE_PRESET: &str = "amy-medium";
 const LEGACY_DEFAULT_AGENT_NAME: &str = "Default Brain";
 const PREVIOUS_DEFAULT_AGENT_NAME: &str = "Gemma 4";
+const PRIOR_DEFAULT_AGENT_NAME: &str = "Rosie";
 const LEGACY_DEFAULT_AGENT_MODEL: &str = "nchapman/dolphin3.0-qwen2.5:3b";
 
 pub struct AgentRepository<'a> {
@@ -250,7 +251,7 @@ impl<'a> AgentRepository<'a> {
             UPDATE agents
             SET workspace_path = ?1,
                 name = CASE
-                    WHEN name = ?2 OR name = ?3 THEN ?4
+                    WHEN name = ?2 OR name = ?3 OR name = ?12 THEN ?4
                     ELSE name
                 END,
                 description = CASE
@@ -258,7 +259,7 @@ impl<'a> AgentRepository<'a> {
                     ELSE description
                 END,
                 default_model = CASE
-                    WHEN default_model IS NULL OR default_model = '' OR default_model = ?7 THEN ?8
+                    WHEN default_model IS NULL OR default_model = '' OR default_model = ?7 OR default_model = ?13 OR default_model = ?14 THEN ?8
                     ELSE default_model
                 END,
                 piper_voice_preset = CASE
@@ -280,6 +281,9 @@ impl<'a> AgentRepository<'a> {
                 &DEFAULT_AGENT_PIPER_VOICE_PRESET,
                 &now,
                 &DEFAULT_AGENT_ID,
+                &PRIOR_DEFAULT_AGENT_NAME,
+                &"gemma4:e4b",
+                &"google/gemma-4-e4b",
             ],
         )?;
 

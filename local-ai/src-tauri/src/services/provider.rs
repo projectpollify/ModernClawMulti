@@ -10,11 +10,7 @@ pub enum ProviderService {
 
 impl ProviderService {
     pub fn new_default() -> Self {
-        if cfg!(target_os = "windows") {
-            Self::LlamaCpp(LlamaCppService::new())
-        } else {
-            Self::Ollama(OllamaService::new())
-        }
+        Self::LlamaCpp(LlamaCppService::new())
     }
 
     pub async fn check_status(&self) -> OllamaStatus {

@@ -344,9 +344,7 @@ fn infer_family(lower_name: &str) -> Option<String> {
 }
 
 fn infer_parameter_size(lower_name: &str) -> Option<String> {
-    if lower_name.contains("gemma-4-e2b") {
-        Some("Gemma 4 E2B".to_string())
-    } else if lower_name.contains("gemma-4-e4b") {
+    if lower_name.contains("gemma-4-e4b") {
         Some("Gemma 4 E4B".to_string())
     } else {
         None
@@ -403,6 +401,7 @@ fn local_model_roots() -> Vec<PathBuf> {
         if let Some(home) = std::env::var_os("HOME") {
             roots.push(PathBuf::from(&home).join(".lmstudio/models"));
             roots.push(PathBuf::from(&home).join(".cache/lm-studio/models"));
+            roots.push(PathBuf::from(&home).join("models"));
         }
     }
 
@@ -469,10 +468,10 @@ fn model_from_path(path: &Path) -> Option<Model> {
 fn canonical_model_name(path: &Path) -> Option<String> {
     let file_name = path.file_name()?.to_str()?.to_ascii_lowercase();
 
-    if file_name.contains("gemma-4-e2b") {
-        Some("google/gemma-4-e2b".to_string())
-    } else if file_name.contains("gemma-4-e4b") {
-        Some("google/gemma-4-e4b".to_string())
+    if file_name.contains("gemma-4-e4b") && file_name.contains("q4_k_m") {
+        Some("Thinking Model".to_string())
+    } else if file_name.contains("gemma-4-e4b") || file_name.contains("gemma-4-e2b") {
+        None
     } else {
         path.file_stem()
             .and_then(|value| value.to_str())

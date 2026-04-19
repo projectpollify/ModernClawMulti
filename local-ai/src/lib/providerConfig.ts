@@ -1,5 +1,5 @@
 export const IS_DIRECT_ENGINE_PROVIDER =
-  typeof navigator !== 'undefined' && /windows/i.test(navigator.userAgent);
+  typeof navigator !== 'undefined' && /windows|linux/i.test(navigator.userAgent);
 
 // Compatibility alias while the Windows parity port still shares some Mac-origin file names.
 export const IS_MAC_MODEL_PROVIDER = IS_DIRECT_ENGINE_PROVIDER;

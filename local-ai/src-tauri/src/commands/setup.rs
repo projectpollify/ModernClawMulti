@@ -122,7 +122,13 @@ fn resolve_llama_server_path(configured: Option<&str>) -> Result<String, String>
         .filter(|value| !value.is_empty())
         .collect::<Vec<_>>();
 
+    #[cfg(target_os = "windows")]
     if let Some(found_in_path) = find_in_path("llama-server.exe") {
+        candidates.push(found_in_path);
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    if let Some(found_in_path) = find_in_path("llama-server") {
         candidates.push(found_in_path);
     }
 
@@ -136,13 +142,24 @@ fn resolve_llama_server_path(configured: Option<&str>) -> Result<String, String>
     }
 
     Err(
-        "Could not find llama-server.exe. Install llama.cpp first, or set the full llama-server path in Settings."
+        "Could not find llama-server. Install llama.cpp first, or set the full llama-server path in Settings."
             .to_string(),
     )
 }
 
 fn common_llama_server_locations() -> Vec<String> {
     let mut candidates = Vec::new();
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        if let Some(home) = std::env::var_os("HOME") {
+            let home = PathBuf::from(home);
+            candidates.push(home.join("llama.cpp/build/bin/llama-server").to_string_lossy().to_string());
+            candidates.push(home.join(".local/bin/llama-server").to_string_lossy().to_string());
+        }
+        candidates.push("/usr/local/bin/llama-server".to_string());
+        candidates.push("/usr/bin/llama-server".to_string());
+    }
 
     if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA") {
         let local_app_data = PathBuf::from(local_app_data);
@@ -245,6 +262,11 @@ fn start_llama_server(state: &State<'_, DatabaseState>, model_path: &str) -> Res
         command.creation_flags(CREATE_NO_WINDOW);
     }
 
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        command.arg("--n-gpu-layers").arg("99");
+    }
+
     let child = command
         .spawn()
         .map_err(|error| format!("Failed to start llama.cpp server: {}", error))?;
@@ -263,22 +285,24 @@ fn stop_llama_server(state: &State<'_, DatabaseState>) {
         .flatten()
         .and_then(|raw| serde_json::from_str::<u32>(&raw).ok());
 
+    #[cfg(target_os = "windows")]
     if let Some(pid) = tracked_pid {
         let mut command = Command::new("taskkill");
         command.arg("/PID").arg(pid.to_string()).arg("/T").arg("/F");
-        #[cfg(target_os = "windows")]
-        {
-            command.creation_flags(CREATE_NO_WINDOW);
-        }
+        command.creation_flags(CREATE_NO_WINDOW);
         let _ = command.stdout(Stdio::null()).stderr(Stdio::null()).status();
     } else {
         let mut command = Command::new("taskkill");
         command.arg("/IM").arg("llama-server.exe").arg("/F");
-        #[cfg(target_os = "windows")]
-        {
-            command.creation_flags(CREATE_NO_WINDOW);
-        }
+        command.creation_flags(CREATE_NO_WINDOW);
         let _ = command.stdout(Stdio::null()).stderr(Stdio::null()).status();
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    if let Some(pid) = tracked_pid {
+        let _ = Command::new("kill").arg("-9").arg(pid.to_string()).stdout(Stdio::null()).stderr(Stdio::null()).status();
+    } else {
+        let _ = Command::new("pkill").arg("-f").arg("llama-server").stdout(Stdio::null()).stderr(Stdio::null()).status();
     }
 
     let _ = state.db.delete_setting("directEnginePid");
@@ -328,9 +352,7 @@ fn infer_model_alias(model_path: &str) -> Option<&'static str> {
         .map(|value| value.to_ascii_lowercase())?;
 
     if lower.contains("gemma-4-e4b") {
-        Some("google/gemma-4-e4b")
-    } else if lower.contains("gemma-4-e2b") {
-        Some("google/gemma-4-e2b")
+        Some("Thinking Model")
     } else {
         None
     }
